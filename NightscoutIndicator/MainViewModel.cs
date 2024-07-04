@@ -1,0 +1,319 @@
+﻿using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing;
+using System.IO;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Text;
+using System.Windows;
+using System.Windows.Forms;
+using System.Windows.Input;
+using System.Windows.Threading;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Json;
+using Microsoft.Extensions.Options;
+using NAudio.Wave;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
+using NightscoutIndicator.Nightscout;
+using NightscoutIndicator.SettingsManagement;
+using Application = System.Windows.Application;
+using MessageBox = System.Windows.MessageBox;
+using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
+
+namespace NightscoutIndicator;
+
+public class MainViewModel : INotifyPropertyChanged, IDisposable
+{
+    private SettingsWindow _settingsWindow;
+    private string _nightscoutUrl;
+    private Visibility _settingsVisibility;
+    private readonly DynamicTrayIconFactory _dynamicTrayIconFactory = new();
+    private readonly NightscoutClient _nightscoutClient;
+    private DateTimeOffset _lastAlarmDate;
+    
+    private NotifyIcon _notifyIconGlucose;
+    private NotifyIcon _notifyIconTrend;
+    private NightscoutEntry _latestEntry;
+    private readonly DataReceiver _dataReceiver;
+    private readonly DiagramViewModel _diagramViewModel;
+    private readonly FlyingIndicatorViewModel _flyingIndicatorViewModel;
+    private readonly DiaCalculations _diaCalculations;
+    private readonly NightscoutIndicatorSettings _settings;
+
+    /// <summary>Initializes a new instance of the <see cref="T:System.Object" /> class.</summary>
+    public MainViewModel(IOptions<NightscoutIndicatorSettings> settings, 
+                         FlyingIndicatorViewModel flyingIndicatorViewModel, 
+                         DiaCalculations diaCalculations,
+                         DataReceiver dataReceiver,
+                         DiagramViewModel diagramViewModel,
+                         NightscoutClient nightscoutClient)
+    {
+        _flyingIndicatorViewModel = flyingIndicatorViewModel;
+        _diaCalculations = diaCalculations;
+        _dataReceiver = dataReceiver;
+        _diagramViewModel = diagramViewModel;
+        _nightscoutClient = nightscoutClient;
+        _settings = settings.Value;
+
+        HideWindowCommand = new DelegateCommand
+        {
+            CommandAction = () => _settingsWindow?.Hide(),
+            CanExecuteFunc = () => Visibility == Visibility.Visible
+        };
+
+        ExitApplicationCommand = new DelegateCommand
+        {
+            CommandAction = () => Application.Current.Shutdown()
+        };
+
+        ShowWindowCommand = new DelegateCommand
+        {
+            CanExecuteFunc = () => Visibility != Visibility.Visible,
+            CommandAction = ShowSettingsWindow,
+        };
+
+        SaveCommand = new DelegateCommand
+        {
+            CanExecuteFunc = () => true,
+            CommandAction = SaveSettings,
+        };
+
+        ShowDiagramCommand = new DelegateCommand
+        {
+            CanExecuteFunc = () => true,
+            CommandAction = () => _diagramViewModel.ShowDiagramAsync(this, null),
+        };
+
+
+        Visibility = Visibility.Hidden;
+
+        CreateIcons();
+        
+        NightscoutUrl = _settings.NightscoutUrl;
+
+        _dataReceiver.DataReceivedEvent += DataReceiver_OnDataReceivedEvent;
+        _dataReceiver.DataExpiredEvent += DataReceiver_OnDataExpiredEvent;
+    }
+
+    private void ShowSettingsWindow()
+    {
+        if (_settingsWindow == null)
+        {
+            _settingsWindow ??= new SettingsWindow();
+            _settingsWindow.Closing += (_, args) =>
+            {
+                args.Cancel = true;
+                _settingsWindow.Hide();
+            };
+            _settingsWindow.DataContext = this;
+        }
+
+        //                    _mainWindow.Show();
+        Visibility = Visibility.Visible;
+    }
+    public ICommand ShowWindowCommand { get; }
+
+    public ICommand HideWindowCommand { get; }
+    
+    public ICommand ExitApplicationCommand { get; }
+        
+    public ICommand SaveCommand { get; }
+    
+    public ICommand ShowDiagramCommand { get; }
+
+    public Visibility Visibility
+    {
+        get => _settingsVisibility;
+
+        set => SetField(ref _settingsVisibility, value);
+    }
+
+    public string NightscoutUrl
+    {
+        get => _nightscoutUrl;
+        set => SetField(ref _nightscoutUrl, value);
+    }
+
+    private void DataReceiver_OnDataExpiredEvent()
+    {
+        UpdateLastData(_latestEntry);
+    }
+
+    private void DataReceiver_OnDataReceivedEvent(List<NightscoutEntry> entries)
+    {
+        if (entries.Any())
+        {
+            _latestEntry = entries.FirstOrDefault();
+            UpdateLastData(_latestEntry);
+        }
+    }
+
+    private void SaveSettings()
+    {
+        _settings.NightscoutUrl = NightscoutUrl;
+
+        // Only the AppSettings section of the user settings file is replaced, other sections are kept
+        var filePath = UserSettingsFile.FilePath;
+        var root = File.Exists(filePath) ? JObject.Parse(File.ReadAllText(filePath)) : new JObject();
+        var serializer = JsonSerializer.Create(new JsonSerializerSettings { Converters = { new StringEnumConverter() } });
+        root[NightscoutIndicatorSettings.SECTION_NAME] = JObject.FromObject(_settings, serializer);
+
+        File.WriteAllText(filePath, root.ToString(Formatting.Indented));
+    }
+
+    private void CreateIcons()
+    {
+        var trayMenu = new ContextMenuStrip();
+        trayMenu.Items.Add("Settings", null, (_, _) => ShowSettingsWindow());
+        trayMenu.Items.Add(new ToolStripSeparator());
+        trayMenu.Items.Add("Exit", null, (_, _) => Application.Current.Shutdown());
+
+        var trayMenu2 = new ContextMenuStrip();
+        trayMenu2.Items.Add("Settings", null, (_, _) => ShowSettingsWindow());
+        trayMenu2.Items.Add(new ToolStripSeparator());
+        trayMenu2.Items.Add("Exit", null, (_, _) => Application.Current.Shutdown());
+
+        
+        _notifyIconGlucose = new NotifyIcon();
+//        _notifyIconGlucose.Icon = new Icon(@"Icon\\arrow-up2.ico", 32, 32);
+        _notifyIconGlucose.ContextMenuStrip = trayMenu;
+        _notifyIconGlucose.MouseClick += _diagramViewModel.ShowDiagramAsync;
+        _notifyIconGlucose.MouseDoubleClick += (_, _) => ShowSettingsWindow();
+        _notifyIconGlucose.Visible = true;
+
+
+        _notifyIconTrend = new NotifyIcon();
+        //        _notifyIconTrend.Icon = new Icon(@"Icon\\arrow-up2.ico", 32, 32);
+        _notifyIconTrend.ContextMenuStrip = trayMenu2;
+        _notifyIconTrend.MouseClick += _diagramViewModel.ShowDiagramAsync;
+        _notifyIconTrend.MouseDoubleClick += (_, _) => ShowSettingsWindow();
+        _notifyIconTrend.Visible = true;
+    }
+
+    private async Task UpdateLastData(NightscoutEntry latestEntry)
+    {
+//        if (latestEntry is null)
+//        {
+//            return;
+//        }
+        
+        var level = _diaCalculations.CalculateLevel(latestEntry?.Value);
+
+        _notifyIconGlucose.Icon?.Dispose();
+        _notifyIconGlucose.Icon = null;
+        var iconGlucose = _dynamicTrayIconFactory.CreateGlucoseBitmapSource(latestEntry?.Value.ToString("0.#"), latestEntry is null || DateTimeOffset.Now - latestEntry.Timestamp > TimeSpan.FromMinutes(30));
+        _notifyIconGlucose.Icon = iconGlucose;
+        _notifyIconGlucose.Text = latestEntry is null ? "null" : latestEntry.Value.ToString("F1");
+        _notifyIconGlucose.Visible = true;
+
+        _notifyIconTrend.Icon?.Dispose();
+        _notifyIconTrend.Icon = null;
+        var iconTrend = _dynamicTrayIconFactory.CreateTrendIcon(latestEntry?.Trend ?? NightscoutTrend.None, _diaCalculations.CalculateLevelDrawingColor(level));
+        _notifyIconTrend.Icon = iconTrend;
+        _notifyIconTrend.Text = latestEntry is null ? "null" : latestEntry.Value.ToString("F1");
+        _notifyIconTrend.Visible = true;
+
+        CheckRaiseAlarm(latestEntry);
+    }
+
+    private void CheckRaiseAlarm(NightscoutEntry latestEntry)
+    {
+        if(latestEntry is null)
+            return;
+        
+        if (_settings.UseAlarm &&
+            latestEntry.Value > _settings.High &&
+            latestEntry.Trend is NightscoutTrend.DoubleUp or NightscoutTrend.Flat or NightscoutTrend.FortyFiveUp or NightscoutTrend.SingleUp &&
+            (latestEntry.Value == 0 || DateTimeOffset.Now > _lastAlarmDate.AddMinutes(_settings.AlarmInterval)))
+        {
+            PlayAlarm(_settings.AlarmHiFileName);
+            _notifyIconGlucose.ShowBalloonTip(3000, "HI", latestEntry.Value.ToString("F1"), ToolTipIcon.Error);
+
+            _lastAlarmDate = DateTimeOffset.Now;
+            return;
+        }
+
+        if (_settings.UseAlarm &&
+            latestEntry.Value <= _settings.Low &&
+            latestEntry.Trend is NightscoutTrend.DoubleDown or NightscoutTrend.Flat or NightscoutTrend.FortyFiveDown or NightscoutTrend.SingleDown &&
+            (latestEntry.Value == 0 || DateTimeOffset.Now > _lastAlarmDate.AddMinutes(_settings.AlarmInterval)))
+        {
+            PlayAlarm(_settings.AlarmLowFileName);
+            _notifyIconGlucose.ShowBalloonTip(3000, "LOW", latestEntry.Value.ToString("F1"), ToolTipIcon.Error);
+
+            _lastAlarmDate = DateTimeOffset.Now;
+            return;
+        }
+    }
+
+    private void PlayAlarm(string fileName)
+    {
+        try
+        {
+            var dir = AppContext.BaseDirectory;
+            var alarm = Path.Combine(dir, fileName);
+
+            if (File.Exists(alarm))
+            {
+                var waveOut = new WaveOut();
+                var audioFileReader = new MediaFoundationReader(alarm);
+                waveOut.Init(audioFileReader);
+                waveOut.Play();
+                _lastAlarmDate = DateTimeOffset.Now;
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Error playng sound {_settings.AlarmHiFileName} :\n{ex.Message}");
+        }
+    }
+
+#region PropertyChanged
+
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    protected virtual void FirePropertyChanged([CallerMemberName] string propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+
+    protected bool SetField<T>(ref T field, T value, [CallerMemberName] string propertyName = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value))
+            return false;
+
+        field = value;
+        FirePropertyChanged(propertyName);
+
+        return true;
+    }
+
+#endregion
+
+    /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+    public void Dispose()
+    {
+        _nightscoutClient?.Dispose();
+        
+        
+        if (_notifyIconGlucose != null)
+        {
+            _notifyIconGlucose.MouseClick -= _diagramViewModel.ShowDiagramAsync;
+        }
+        _notifyIconGlucose?.Dispose();
+        _notifyIconGlucose = null;
+
+
+        if (_notifyIconTrend != null)
+        {
+            _notifyIconTrend.MouseClick -= _diagramViewModel.ShowDiagramAsync;
+        }
+        _notifyIconTrend?.Dispose();
+        _notifyIconTrend = null;
+
+
+        _dynamicTrayIconFactory?.Dispose();
+    }
+}

@@ -1,0 +1,43 @@
+﻿<UserControl x:Class="NightscoutIndicator.ArrowControl"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:nightscoutIndicator="clr-namespace:NightscoutIndicator"
+             mc:Ignorable="d"
+             d:DesignHeight="70" d:DesignWidth="70"
+             d:DataContext="{d:DesignInstance Type=nightscoutIndicator:FlyingIndicatorViewModel}"
+             >
+    <Border  
+                CornerRadius="20" 
+                Background="#60c0c0c0"
+                >
+
+        <Grid
+                >
+            <Polygon Fill="{Binding ArrowColor, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
+                             Points="20,0 5,20 12,20 12,40 28,40 28,20 35,20"
+                             Stretch="Fill"
+                             RenderTransformOrigin="0.5,0.5"
+                             >
+                <Polygon.RenderTransform>
+                    <RotateTransform Angle="{Binding DataContext.AngleByTrend, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl} }"></RotateTransform>
+                </Polygon.RenderTransform>
+
+            </Polygon>
+            <Viewbox>
+                <!-- <TextBlock Text="11.8"  -->
+                <!--                    FontWeight="Bold"  -->
+                <!--                    FontSize="15" -->
+                <!--                     HorizontalAlignment="Center"  -->
+                <!--                     VerticalAlignment="Center"/> -->
+                <TextBlock Text="{Binding DataContext.GlucoseValueText, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl} }"
+                           Foreground="{Binding DataContext.BrushByIsExpired, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=UserControl}}"
+                FontWeight="Bold"
+                FontSize="25"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"/>
+            </Viewbox>
+        </Grid>
+    </Border>
+</UserControl>

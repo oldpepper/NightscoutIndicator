@@ -1,0 +1,42 @@
+﻿<Window x:Class="NightscoutIndicator.FlyingIndicatorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+        xmlns:local="clr-namespace:NightscoutIndicator"
+        mc:Ignorable="d"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        SizeToContent="WidthAndHeight"
+        ResizeMode="NoResize" 
+        ShowInTaskbar="False"
+        d:DesignHeight="100" d:DesignWidth="100"
+        d:DataContext="{d:DesignInstance Type=local:FlyingIndicatorViewModel}"
+        Visibility="{Binding Visibility, NotifyOnTargetUpdated=True, NotifyOnSourceUpdated=True, Mode=OneWay}"
+        Top="{Binding Top, NotifyOnTargetUpdated=True, NotifyOnSourceUpdated=True, Mode=TwoWay}"
+        Left="{Binding Left, NotifyOnTargetUpdated=True, NotifyOnSourceUpdated=True, Mode=TwoWay}"
+        WindowStartupLocation="Manual"
+        
+        >
+    <i:Interaction.Triggers>
+        <i:EventTrigger EventName="MouseRightButtonUp">
+            <!-- <i:EventTrigger EventName="MouseLeftButtonUp"> -->
+            <i:InvokeCommandAction Command="{Binding ShowDiagramCommand}"></i:InvokeCommandAction>
+        </i:EventTrigger>
+    </i:Interaction.Triggers>
+    <Grid>
+        <local:ArrowControl 
+            HorizontalAlignment="Stretch"
+            VerticalAlignment="Stretch"
+            ArrowColor="{Binding BrushByGlucose}"
+            GlucoseColor="{Binding BrushByIsExpired}"
+            Height="{Binding FlyingIndicatorSize}"
+            Width="{Binding FlyingIndicatorSize}"
+            
+            MouseLeftButtonDown="Border_MouseLeftButtonDown"></local:ArrowControl>
+    </Grid>
+
+</Window>
