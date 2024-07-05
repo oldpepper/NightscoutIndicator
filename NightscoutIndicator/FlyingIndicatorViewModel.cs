@@ -93,7 +93,9 @@ public partial class FlyingIndicatorViewModel : INotifyPropertyChanged, IDisposa
         }
     }
 
-    /// <summary>Initializes a new instance of the <see cref="T:System.Object" /> class.</summary>
+    /// <summary>
+    /// Initializes a new instance of the <see cref="FlyingIndicatorViewModel"/> class.
+    /// </summary>
     public FlyingIndicatorViewModel(IOptions<NightscoutIndicatorSettings> settings, 
                                     DataReceiver dataReceiver, 
                                     IWritableOptions<FlyingIndicatorWindowSettings> windowSettingsWritableOptions, 
@@ -206,6 +208,19 @@ public partial class FlyingIndicatorViewModel : INotifyPropertyChanged, IDisposa
         Visibility = Visibility.Visible;
     }
 
+    /// <summary>
+    /// Applies the changed settings to the indicator.
+    /// </summary>
+    public void ApplySettings()
+    {
+        FirePropertyChanged(nameof(FlyingIndicatorSize));
+
+        if (_lastNightscoutEntry != null)
+        {
+            UpdateIndicator(_lastNightscoutEntry);
+        }
+    }
+
 #region PropertyChanged
 
     public event PropertyChangedEventHandler PropertyChanged;
@@ -228,7 +243,9 @@ public partial class FlyingIndicatorViewModel : INotifyPropertyChanged, IDisposa
 
 #endregion
 
-    /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+    /// <summary>
+    /// Releases the resources.
+    /// </summary>
     public void Dispose()
     {
         _saveWindowSettingsDelayTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);

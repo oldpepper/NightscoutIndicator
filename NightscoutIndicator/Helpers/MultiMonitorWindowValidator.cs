@@ -9,7 +9,7 @@ using System.Windows.Media;
 public static class MultiMonitorWindowValidator
 {
     /// <summary>
-    /// Validates and corrects the window position for a multi-monitor configuration
+    /// Validates and corrects the window position for a multi-monitor configuration.
     /// </summary>
     /// <param name="windowLeft">Window left position</param>
     /// <param name="windowTop">Window top position</param>
@@ -69,7 +69,7 @@ public static class MultiMonitorWindowValidator
     }
 
     /// <summary>
-    /// Checks whether the window is visible on any screen
+    /// Checks whether the window is visible on any screen.
     /// </summary>
     private static bool IsWindowVisibleOnAnyScreen(
         double left, double top, double width, double height, Screen[] screens)
@@ -92,7 +92,7 @@ public static class MultiMonitorWindowValidator
     }
 
     /// <summary>
-    /// Finds the best screen to place the window on
+    /// Finds the best screen to place the window on.
     /// </summary>
     private static Screen FindBestScreenForWindow(
         double left, double top, double width, double height, Screen[] screens)
@@ -126,7 +126,7 @@ public static class MultiMonitorWindowValidator
     }
 
     /// <summary>
-    /// Centers the window on the specified screen taking DPI into account
+    /// Centers the window on the specified screen taking DPI into account.
     /// </summary>
     private static System.Drawing.Point CenterWindowOnScreen(
         Screen screen, double windowWidth, double windowHeight)
@@ -146,7 +146,7 @@ public static class MultiMonitorWindowValidator
     }
 
     /// <summary>
-    /// Corrects the window position so that it fits on the screen
+    /// Corrects the window position so that it fits on the screen.
     /// </summary>
     private static System.Drawing.Point EnsureWindowFitsOnScreen(
         double left, double top, double width, double height, Screen screen)
@@ -177,7 +177,7 @@ public static class MultiMonitorWindowValidator
     }
 
     /// <summary>
-    /// Gets the DPI scale for a specific screen (for WPF)
+    /// Gets the DPI scale of the screen for WPF.
     /// </summary>
     public static double GetDpiScaleForScreen(Screen screen, Window window = null)
     {
@@ -206,7 +206,7 @@ public static class MultiMonitorWindowValidator
     }
 
     /// <summary>
-    /// Checks whether the screen the window was supposed to be shown on is disconnected
+    /// Checks whether the window's screen is disconnected.
     /// </summary>
     public static bool IsTargetScreenAvailable(string deviceName)
     {
@@ -217,7 +217,7 @@ public static class MultiMonitorWindowValidator
     }
 
     /// <summary>
-    /// Gets the virtual bounds of all screens
+    /// Gets the virtual bounds of all screens.
     /// </summary>
     public static Rectangle GetVirtualScreenBounds()
     {
@@ -230,7 +230,7 @@ public static class MultiMonitorWindowValidator
     }
 
     /// <summary>
-    /// Converts WPF coordinates to screen coordinates taking DPI into account
+    /// Converts WPF coordinates to screen coordinates taking DPI into account.
     /// </summary>
     public static System.Drawing.Point ConvertWpfToScreenCoordinates(
         double wpfX, double wpfY, Window window)
@@ -248,7 +248,7 @@ public static class MultiMonitorWindowValidator
     }
 
     /// <summary>
-    /// Gets monitor information by the window handle
+    /// Gets the monitor information by the window handle.
     /// </summary>
     public static Screen GetScreenFromWindowHandle(Window window)
     {

@@ -14,7 +14,7 @@ public class DataReceiver : IDisposable
     public event Action DataExpiredEvent;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="T:System.Object" /> class.
+    /// Initializes a new instance of the <see cref="DataReceiver"/> class.
     /// </summary>
     public DataReceiver(IOptions<NightscoutIndicatorSettings> settings, NightscoutClient nightscoutClient)
     {
@@ -90,7 +90,9 @@ public class DataReceiver : IDisposable
         }
     }
 
-    /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+    /// <summary>
+    /// Releases the resources.
+    /// </summary>
     public void Dispose()
     {
         Dispose(true);

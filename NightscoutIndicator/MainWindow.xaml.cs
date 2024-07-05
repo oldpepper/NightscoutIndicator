@@ -1,25 +1,45 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows;
 
 namespace NightscoutIndicator
 {
     /// <summary>
-    /// Interaction logic for MainWindow.xaml
+    /// Settings window.
     /// </summary>
     public partial class SettingsWindow : Window
     {
-        public SettingsWindow()
+        private readonly SettingsViewModel _viewModel;
+
+        public SettingsWindow(SettingsViewModel viewModel)
         {
             InitializeComponent();
-            this.Title = "Tray App Window";
+
+            _viewModel = viewModel;
+            DataContext = viewModel;
+            ApiSecretBox.Password = viewModel.ApiSecret ?? string.Empty;
+
+            _viewModel.CloseRequestedEvent += ViewModel_OnCloseRequestedEvent;
+        }
+
+        private void ViewModel_OnCloseRequestedEvent()
+        {
+            Close();
+        }
+
+        private void ApiSecretBox_OnPasswordChanged(object sender, RoutedEventArgs e)
+        {
+            // PasswordBox does not support binding, so the secret is synchronized manually
+            _viewModel.ApiSecret = ApiSecretBox.Password;
+        }
+
+        /// <summary>
+        /// Unsubscribes from the view model.
+        /// </summary>
+        protected override void OnClosed(EventArgs e)
+        {
+            // The view model is a singleton and outlives the window
+            _viewModel.CloseRequestedEvent -= ViewModel_OnCloseRequestedEvent;
+
+            base.OnClosed(e);
         }
     }
 }

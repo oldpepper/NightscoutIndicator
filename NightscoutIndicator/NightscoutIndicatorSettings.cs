@@ -24,5 +24,28 @@ public class NightscoutIndicatorSettings
     public string AlarmHiFileName { get; set; }
     public string AlarmLowFileName { get; set; }
     public int DataExpirationTimeout { get; set; } = 30; // minutes
-    public int FlyingIndicatorSize { get; set; } = 50; 
+    public int FlyingIndicatorSize { get; set; } = 50;
+
+    /// <summary>
+    /// Creates a shallow copy of the settings.
+    /// </summary>
+    public NightscoutIndicatorSettings Clone()
+    {
+        return (NightscoutIndicatorSettings)MemberwiseClone();
+    }
+
+    /// <summary>
+    /// Copies the settings values from another instance.
+    /// </summary>
+    /// <param name="source">Settings to copy from.</param>
+    public void CopyFrom(NightscoutIndicatorSettings source)
+    {
+        foreach (var property in typeof(NightscoutIndicatorSettings).GetProperties())
+        {
+            if (property.CanRead && property.CanWrite)
+            {
+                property.SetValue(this, property.GetValue(source));
+            }
+        }
+    }
 }

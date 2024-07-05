@@ -10,9 +10,7 @@ using MessageBox = System.Windows.MessageBox;
 namespace NightscoutIndicator;
 
 /// <summary>
-/// Provides bindable properties and commands for the NotifyIcon. In this sample, the
-/// view model is assigned to the NotifyIcon in XAML. Alternatively, the startup routing
-/// in App.xaml.cs could have created this view model, and assigned it to the NotifyIcon.
+/// Glucose diagram view model.
 /// </summary>
 public partial class DiagramViewModel : INotifyPropertyChanged, IDisposable
 {
@@ -21,7 +19,9 @@ public partial class DiagramViewModel : INotifyPropertyChanged, IDisposable
     private bool _isDiagramOpened;
     private GlucoseDiagram _diagram;
 
-    /// <summary>Initializes a new instance of the <see cref="T:System.Object" /> class.</summary>
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DiagramViewModel"/> class.
+    /// </summary>
     public DiagramViewModel(
             IOptions<NightscoutIndicatorSettings> settings,
             NightscoutClient nightscoutClient
@@ -106,7 +106,9 @@ public partial class DiagramViewModel : INotifyPropertyChanged, IDisposable
     
 #endregion
 
-    /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+    /// <summary>
+    /// Releases the resources.
+    /// </summary>
     public void Dispose()
     {
         _diagram?.Dispose();

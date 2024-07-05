@@ -8,7 +8,9 @@ public class SettingsManager : IDisposable
     private readonly FlyingIndicatorWindowSettings _flyingIndicatorWindowSettings;
     private Timer _saveTimer;
 
-    /// <summary>Initializes a new instance of the <see cref="T:System.Object" /> class.</summary>
+    /// <summary>
+    /// Initializes a new instance of the <see cref="SettingsManager"/> class.
+    /// </summary>
     public SettingsManager(IWritableOptions<FlyingIndicatorWindowSettings> writableOptions)
     {
         _writableOptions = writableOptions;
@@ -38,7 +40,9 @@ public class SettingsManager : IDisposable
         _saveTimer.Change(TimeSpan.FromSeconds(3), Timeout.InfiniteTimeSpan);
     }
 
-    /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+    /// <summary>
+    /// Releases the resources.
+    /// </summary>
     public void Dispose()
     {
         _saveTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);

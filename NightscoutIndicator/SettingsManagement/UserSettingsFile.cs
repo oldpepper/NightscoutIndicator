@@ -1,10 +1,11 @@
 using System.IO;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace NightscoutIndicator.SettingsManagement;
 
 /// <summary>
-/// Location and initialization of the per-user settings file
-/// (%LOCALAPPDATA%\NightscoutIndicator\usersettings.json).
+/// User settings file.
 /// </summary>
 public static class UserSettingsFile
 {
@@ -14,7 +15,7 @@ public static class UserSettingsFile
     public const string DEFAULT_FILE_NAME = "appsettings.json";
 
     /// <summary>
-    /// Name of the developer settings file (Debug builds only, not stored in git).
+    /// Name of the developer settings file.
     /// </summary>
     public const string DEVELOPMENT_FILE_NAME = "appsettings.Development.json";
 
@@ -30,7 +31,7 @@ public static class UserSettingsFile
         USER_FILE_NAME);
 
     /// <summary>
-    /// Creates the user settings file from the default settings on the first run.
+    /// Creates the user settings file from the default settings.
     /// </summary>
     /// <param name="defaultFilePath">Full path to the default settings file.</param>
     public static void EnsureCreated(string defaultFilePath)
@@ -50,5 +51,47 @@ public static class UserSettingsFile
         {
             File.WriteAllText(FilePath, "{}");
         }
+    }
+
+    /// <summary>
+    /// Reads a section of the user settings file.
+    /// </summary>
+    /// <param name="sectionName">Name of the section.</param>
+    /// <returns>The section or null if the file or the section does not exist.</returns>
+    public static JObject ReadSection(string sectionName)
+    {
+        var root = ReadRoot();
+
+        return root[sectionName] as JObject;
+    }
+
+    /// <summary>
+    /// Writes a section of the user settings file.
+    /// </summary>
+    /// <param name="sectionName">Name of the section.</param>
+    /// <param name="section">New content of the section.</param>
+    public static void WriteSection(string sectionName, JObject section)
+    {
+        var root = ReadRoot();
+        root[sectionName] = section;
+
+        Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
+        File.WriteAllText(FilePath, root.ToString(Formatting.Indented));
+    }
+
+    private static JObject ReadRoot()
+    {
+        if (!File.Exists(FilePath))
+        {
+            return new JObject();
+        }
+
+        var text = File.ReadAllText(FilePath);
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return new JObject();
+        }
+
+        return JObject.Parse(text);
     }
 }

@@ -14,7 +14,9 @@ public class NightscoutClient : IDisposable
     public NightscoutIndicatorSettings _settings { get; set; }
 
 
-    /// <summary>Initializes a new instance of the <see cref="T:System.Object" /> class.</summary>
+    /// <summary>
+    /// Initializes a new instance of the <see cref="NightscoutClient"/> class.
+    /// </summary>
     public NightscoutClient(IOptions<NightscoutIndicatorSettings> settings)
     {
         _settings = settings.Value;
@@ -44,7 +46,7 @@ public class NightscoutClient : IDisposable
     }
 
     /// <summary>
-    /// Nightscout expects the SHA1 hash of the API secret in lowercase hex.
+    /// Computes the SHA1 hash of the API secret in lowercase hex, as Nightscout expects.
     /// </summary>
     private static string GetApiSecretHash(string apiSecret)
     {
@@ -52,7 +54,9 @@ public class NightscoutClient : IDisposable
         return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
-    /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+    /// <summary>
+    /// Releases the resources.
+    /// </summary>
     public void Dispose()
     {
         _client?.Dispose();

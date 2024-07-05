@@ -27,8 +27,7 @@ namespace NightscoutIndicator;
 public class MainViewModel : INotifyPropertyChanged, IDisposable
 {
     private SettingsWindow _settingsWindow;
-    private string _nightscoutUrl;
-    private Visibility _settingsVisibility;
+    private readonly SettingsViewModel _settingsViewModel;
     private readonly DynamicTrayIconFactory _dynamicTrayIconFactory = new();
     private readonly NightscoutClient _nightscoutClient;
     private DateTimeOffset _lastAlarmDate;
@@ -42,98 +41,62 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     private readonly DiaCalculations _diaCalculations;
     private readonly NightscoutIndicatorSettings _settings;
 
-    /// <summary>Initializes a new instance of the <see cref="T:System.Object" /> class.</summary>
+    /// <summary>
+    /// Initializes a new instance of the <see cref="MainViewModel"/> class.
+    /// </summary>
     public MainViewModel(IOptions<NightscoutIndicatorSettings> settings, 
                          FlyingIndicatorViewModel flyingIndicatorViewModel, 
                          DiaCalculations diaCalculations,
                          DataReceiver dataReceiver,
                          DiagramViewModel diagramViewModel,
-                         NightscoutClient nightscoutClient)
+                         NightscoutClient nightscoutClient,
+                         SettingsViewModel settingsViewModel)
     {
         _flyingIndicatorViewModel = flyingIndicatorViewModel;
         _diaCalculations = diaCalculations;
         _dataReceiver = dataReceiver;
         _diagramViewModel = diagramViewModel;
         _nightscoutClient = nightscoutClient;
+        _settingsViewModel = settingsViewModel;
         _settings = settings.Value;
-
-        HideWindowCommand = new DelegateCommand
-        {
-            CommandAction = () => _settingsWindow?.Hide(),
-            CanExecuteFunc = () => Visibility == Visibility.Visible
-        };
 
         ExitApplicationCommand = new DelegateCommand
         {
             CommandAction = () => Application.Current.Shutdown()
         };
 
-        ShowWindowCommand = new DelegateCommand
-        {
-            CanExecuteFunc = () => Visibility != Visibility.Visible,
-            CommandAction = ShowSettingsWindow,
-        };
-
-        SaveCommand = new DelegateCommand
-        {
-            CanExecuteFunc = () => true,
-            CommandAction = SaveSettings,
-        };
-
-        ShowDiagramCommand = new DelegateCommand
-        {
-            CanExecuteFunc = () => true,
-            CommandAction = () => _diagramViewModel.ShowDiagramAsync(this, null),
-        };
-
-
-        Visibility = Visibility.Hidden;
-
         CreateIcons();
-        
-        NightscoutUrl = _settings.NightscoutUrl;
 
+        _settingsViewModel.SettingsSavedEvent += SettingsViewModel_OnSettingsSavedEvent;
         _dataReceiver.DataReceivedEvent += DataReceiver_OnDataReceivedEvent;
         _dataReceiver.DataExpiredEvent += DataReceiver_OnDataExpiredEvent;
     }
 
     private void ShowSettingsWindow()
     {
-        if (_settingsWindow == null)
+        if (_settingsWindow != null)
         {
-            _settingsWindow ??= new SettingsWindow();
-            _settingsWindow.Closing += (_, args) =>
-            {
-                args.Cancel = true;
-                _settingsWindow.Hide();
-            };
-            _settingsWindow.DataContext = this;
+            _settingsWindow.Activate();
+            return;
         }
 
-        //                    _mainWindow.Show();
-        Visibility = Visibility.Visible;
+        // Every time the window is opened it shows the current settings
+        _settingsViewModel.Load();
+        _settingsWindow = new SettingsWindow(_settingsViewModel);
+        _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+        _settingsWindow.Show();
+        _settingsWindow.Activate();
     }
-    public ICommand ShowWindowCommand { get; }
 
-    public ICommand HideWindowCommand { get; }
-    
     public ICommand ExitApplicationCommand { get; }
-        
-    public ICommand SaveCommand { get; }
-    
-    public ICommand ShowDiagramCommand { get; }
 
-    public Visibility Visibility
+    /// <summary>
+    /// Redraws the tray icons and the indicator with the new settings.
+    /// </summary>
+    private void SettingsViewModel_OnSettingsSavedEvent()
     {
-        get => _settingsVisibility;
-
-        set => SetField(ref _settingsVisibility, value);
-    }
-
-    public string NightscoutUrl
-    {
-        get => _nightscoutUrl;
-        set => SetField(ref _nightscoutUrl, value);
+        _flyingIndicatorViewModel.ApplySettings();
+        _ = UpdateLastData(_latestEntry);
     }
 
     private void DataReceiver_OnDataExpiredEvent()
@@ -148,19 +111,6 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
             _latestEntry = entries.FirstOrDefault();
             UpdateLastData(_latestEntry);
         }
-    }
-
-    private void SaveSettings()
-    {
-        _settings.NightscoutUrl = NightscoutUrl;
-
-        // Only the AppSettings section of the user settings file is replaced, other sections are kept
-        var filePath = UserSettingsFile.FilePath;
-        var root = File.Exists(filePath) ? JObject.Parse(File.ReadAllText(filePath)) : new JObject();
-        var serializer = JsonSerializer.Create(new JsonSerializerSettings { Converters = { new StringEnumConverter() } });
-        root[NightscoutIndicatorSettings.SECTION_NAME] = JObject.FromObject(_settings, serializer);
-
-        File.WriteAllText(filePath, root.ToString(Formatting.Indented));
     }
 
     private void CreateIcons()
@@ -292,9 +242,12 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
 
 #endregion
 
-    /// <summary>Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.</summary>
+    /// <summary>
+    /// Releases the resources.
+    /// </summary>
     public void Dispose()
     {
+        _settingsViewModel.SettingsSavedEvent -= SettingsViewModel_OnSettingsSavedEvent;
         _nightscoutClient?.Dispose();
         
         

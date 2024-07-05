@@ -5,7 +5,7 @@ using System.Windows.Media;
 namespace NightscoutIndicator
 {
     /// <summary>
-    /// Interaction logic for UserControl1.xaml
+    /// Trend arrow control.
     /// </summary>
     public partial class ArrowControl : UserControl
     {

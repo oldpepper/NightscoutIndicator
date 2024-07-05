@@ -7,7 +7,9 @@ public class DiaCalculations
 {
     private readonly NightscoutIndicatorSettings _settings;
 
-    /// <summary>Initializes a new instance of the <see cref="T:System.Object" /> class.</summary>
+    /// <summary>
+    /// Initializes a new instance of the <see cref="DiaCalculations"/> class.
+    /// </summary>
     public DiaCalculations(IOptions<NightscoutIndicatorSettings> settings)
     {
         _settings = settings.Value;

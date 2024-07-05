@@ -8,7 +8,7 @@ using System.Windows.Input;
 namespace NightscoutIndicator
 {
     /// <summary>
-    /// Simplistic delegate command for the demo.
+    /// Simple delegate command.
     /// </summary>
     public class DelegateCommand : ICommand
     {

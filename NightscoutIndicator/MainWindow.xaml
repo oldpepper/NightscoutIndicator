@@ -5,26 +5,178 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NightscoutIndicator"
         mc:Ignorable="d"
-        d:DataContext="{d:DesignInstance Type=local:MainViewModel}"
-        Visibility="{Binding Visibility, NotifyOnTargetUpdated=True, NotifyOnSourceUpdated=True, Mode=TwoWay}"
-        Title="Nightscout Indicator Settings" Height="359" Width="665">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="150" MinWidth="150"></ColumnDefinition>
-            <ColumnDefinition Width="*" MinWidth="200"></ColumnDefinition>
-        </Grid.ColumnDefinitions>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="25" ></RowDefinition>
-            <RowDefinition Height="25"></RowDefinition>
-            <RowDefinition Height="25"></RowDefinition>
-            <RowDefinition Height="*"></RowDefinition>
-        </Grid.RowDefinitions>
+        d:DataContext="{d:DesignInstance Type=local:SettingsViewModel}"
+        Title="Nightscout Indicator Settings"
+        Width="560"
+        SizeToContent="Height"
+        ResizeMode="NoResize"
+        WindowStartupLocation="CenterScreen">
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
+        <Style TargetType="GroupBox">
+            <Setter Property="Margin" Value="8,4" />
+            <Setter Property="Padding" Value="4" />
+        </Style>
+        <Style TargetType="Label">
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="TextBox">
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="PasswordBox">
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="ComboBox">
+            <Setter Property="Margin" Value="2" />
+        </Style>
+        <Style TargetType="CheckBox">
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style TargetType="Button">
+            <Setter Property="Margin" Value="4,0,0,0" />
+            <Setter Property="MinWidth" Value="80" />
+            <Setter Property="Padding" Value="8,2" />
+        </Style>
+    </Window.Resources>
 
-        <Label Grid.Column="0" Content="NightscoutUrl" HorizontalAlignment="Left" VerticalAlignment="Center"  Width="78" Height="25" />
-        <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding NightscoutUrl}"  HorizontalAlignment="Stretch" />
+    <StackPanel Margin="0,4,0,8">
+        <GroupBox Header="Nightscout server">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-        <Button Grid.Row="3" Grid.Column="0" Command="{Binding SaveCommand}" VerticalAlignment="Bottom" Margin="2" Height="18">Save</Button>
+                <Label Grid.Row="0" Grid.Column="0" Content="URL" />
+                <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding NightscoutUrl, UpdateSourceTrigger=PropertyChanged}" />
 
-        <Button Grid.Row="3" Grid.Column="1" Command="{Binding ShowDiagramCommand}" VerticalAlignment="Bottom" Margin="2" Height="18">Save</Button>
-    </Grid>
+                <Label Grid.Row="1" Grid.Column="0" Content="API secret" />
+                <PasswordBox Grid.Row="1" Grid.Column="1" x:Name="ApiSecretBox" PasswordChanged="ApiSecretBox_OnPasswordChanged" />
+
+                <Label Grid.Row="2" Grid.Column="0" Content="Update interval, s" />
+                <TextBox Grid.Row="2" Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding UpdateInterval, UpdateSourceTrigger=PropertyChanged}" />
+
+                <Label Grid.Row="3" Grid.Column="0" Content="Data expiration timeout, min" />
+                <TextBox Grid.Row="3" Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding DataExpirationTimeout, UpdateSourceTrigger=PropertyChanged}" />
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Header="Glucose">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="90" />
+                    <ColumnDefinition Width="90" />
+                    <ColumnDefinition Width="90" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Label Grid.Row="0" Grid.Column="0" Content="Unit" />
+                <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Units}" SelectedItem="{Binding Unit}" />
+
+                <Label Grid.Row="1" Grid.Column="0" Content="Thresholds" />
+                <Label Grid.Row="1" Grid.Column="1" Content="Extra low" Padding="2,0" />
+                <Label Grid.Row="1" Grid.Column="2" Content="Low" Padding="2,0" />
+                <Label Grid.Row="1" Grid.Column="3" Content="High" Padding="2,0" />
+                <Label Grid.Row="1" Grid.Column="4" Content="Extra high" Padding="2,0" />
+
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ExtraLow, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding Low, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Grid.Row="2" Grid.Column="3" Text="{Binding High, UpdateSourceTrigger=PropertyChanged}" />
+                <TextBox Grid.Row="2" Grid.Column="4" Width="86" HorizontalAlignment="Left" Text="{Binding ExtraHigh, UpdateSourceTrigger=PropertyChanged}" />
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Header="Graph">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Label Grid.Row="0" Grid.Column="0" Content="Time range, h" />
+                <TextBox Grid.Row="0" Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding TimeRange, UpdateSourceTrigger=PropertyChanged}" />
+
+                <Label Grid.Row="1" Grid.Column="0" Content="Size (width × height), px" />
+                <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
+                    <TextBox Width="80" Text="{Binding Width, UpdateSourceTrigger=PropertyChanged}" />
+                    <Label Content="×" />
+                    <TextBox Width="80" Text="{Binding Height, UpdateSourceTrigger=PropertyChanged}" />
+                </StackPanel>
+
+                <Label Grid.Row="2" Grid.Column="0" Content="Font size" />
+                <TextBox Grid.Row="2" Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged}" />
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Header="Alarm">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <CheckBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="6,4" Content="Play sound and show notification" IsChecked="{Binding UseAlarm}" />
+
+                <Label Grid.Row="1" Grid.Column="0" Content="Repeat not more often, min" />
+                <TextBox Grid.Row="1" Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding AlarmInterval, UpdateSourceTrigger=PropertyChanged}" />
+
+                <Label Grid.Row="2" Grid.Column="0" Content="High alarm sound file" />
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding AlarmHiFileName, UpdateSourceTrigger=PropertyChanged}" />
+
+                <Label Grid.Row="3" Grid.Column="0" Content="Low alarm sound file" />
+                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding AlarmLowFileName, UpdateSourceTrigger=PropertyChanged}" />
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Header="Flying indicator">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Column="0" Content="Size, px" />
+                <TextBox Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding FlyingIndicatorSize, UpdateSourceTrigger=PropertyChanged}" />
+            </Grid>
+        </GroupBox>
+
+        <TextBlock Margin="12,4" TextWrapping="Wrap" Foreground="DarkGoldenrod"
+                   Text="{Binding DevelopmentOverridesText}"
+                   Visibility="{Binding HasDevelopmentOverrides, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+        <TextBlock Margin="12,4" TextWrapping="Wrap" Foreground="Firebrick"
+                   Text="{Binding ErrorText}"
+                   Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}" />
+
+        <StackPanel Margin="8,8,8,0" Orientation="Horizontal" HorizontalAlignment="Right">
+            <Button Content="Save" IsDefault="True" Command="{Binding SaveCommand}" />
+            <Button Content="Cancel" IsCancel="True" Command="{Binding CancelCommand}" />
+        </StackPanel>
+    </StackPanel>
 </Window>

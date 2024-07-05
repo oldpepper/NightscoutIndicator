@@ -11,7 +11,7 @@ using Application = System.Windows.Application;
 namespace NightscoutIndicator
 {
     /// <summary>
-    /// Interaction logic for App.xaml
+    /// Application.
     /// </summary>
     public partial class App : Application
     {
@@ -53,6 +53,7 @@ namespace NightscoutIndicator
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<FlyingIndicatorViewModel>();
             services.AddSingleton<DiagramViewModel>();
+            services.AddSingleton<SettingsViewModel>();
             services.AddSingleton<NightscoutIndicatorSettings>();
             services.AddSingleton<FlyingIndicatorWindowSettings>();
             services.AddSingleton<DataReceiver>();
@@ -67,7 +68,9 @@ namespace NightscoutIndicator
             base.OnStartup(e);
         }
 
-        /// <summary>Raises the <see cref="E:System.Windows.Application.Exit" /> event.</summary>
+        /// <summary>
+        /// Raises the <see cref="E:System.Windows.Application.Exit" /> event.
+        /// </summary>
         /// <param name="e">An <see cref="T:System.Windows.ExitEventArgs" /> that contains the event data.</param>
         protected override void OnExit(ExitEventArgs e)
         {

@@ -16,7 +16,7 @@ using System.Windows.Shapes;
 namespace NightscoutIndicator
 {
     /// <summary>
-    /// Interaction logic for FlyingIndicator.xaml
+    /// Flying indicator window.
     /// </summary>
     public partial class FlyingIndicatorWindow : Window
     {
