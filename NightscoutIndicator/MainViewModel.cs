@@ -151,17 +151,18 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         
         var level = _diaCalculations.CalculateLevel(latestEntry?.Value);
 
-        _notifyIconGlucose.Icon?.Dispose();
-        _notifyIconGlucose.Icon = null;
-        var iconGlucose = _dynamicTrayIconFactory.CreateGlucoseBitmapSource(latestEntry?.Value.ToString("0.#"), latestEntry is null || DateTimeOffset.Now - latestEntry.Timestamp > TimeSpan.FromMinutes(30));
+        var oldGlucoseIcon = _notifyIconGlucose.Icon;
+        var isExpired = latestEntry is null || DateTimeOffset.Now - latestEntry.Timestamp > TimeSpan.FromMinutes(_settings.DataExpirationTimeout);
+        var iconGlucose = _dynamicTrayIconFactory.CreateGlucoseBitmapSource(latestEntry?.Value.ToString("0.#"), isExpired);
         _notifyIconGlucose.Icon = iconGlucose;
+        oldGlucoseIcon?.Dispose();
         _notifyIconGlucose.Text = latestEntry is null ? "null" : latestEntry.Value.ToString("F1");
         _notifyIconGlucose.Visible = true;
 
-        _notifyIconTrend.Icon?.Dispose();
-        _notifyIconTrend.Icon = null;
+        var oldTrendIcon = _notifyIconTrend.Icon;
         var iconTrend = _dynamicTrayIconFactory.CreateTrendIcon(latestEntry?.Trend ?? NightscoutTrend.None, _diaCalculations.CalculateLevelDrawingColor(level));
         _notifyIconTrend.Icon = iconTrend;
+        oldTrendIcon?.Dispose();
         _notifyIconTrend.Text = latestEntry is null ? "null" : latestEntry.Value.ToString("F1");
         _notifyIconTrend.Visible = true;
 
@@ -255,18 +256,19 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         {
             _notifyIconGlucose.MouseClick -= _diagramViewModel.ShowDiagramAsync;
         }
+        var iconGlucose = _notifyIconGlucose?.Icon;
         _notifyIconGlucose?.Dispose();
         _notifyIconGlucose = null;
+        iconGlucose?.Dispose();
 
 
         if (_notifyIconTrend != null)
         {
             _notifyIconTrend.MouseClick -= _diagramViewModel.ShowDiagramAsync;
         }
+        var iconTrend = _notifyIconTrend?.Icon;
         _notifyIconTrend?.Dispose();
         _notifyIconTrend = null;
-
-
-        _dynamicTrayIconFactory?.Dispose();
+        iconTrend?.Dispose();
     }
 }

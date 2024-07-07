@@ -166,10 +166,6 @@
             </Grid>
         </GroupBox>
 
-        <TextBlock Margin="12,4" TextWrapping="Wrap" Foreground="DarkGoldenrod"
-                   Text="{Binding DevelopmentOverridesText}"
-                   Visibility="{Binding HasDevelopmentOverrides, Converter={StaticResource BooleanToVisibilityConverter}}" />
-
         <TextBlock Margin="12,4" TextWrapping="Wrap" Foreground="Firebrick"
                    Text="{Binding ErrorText}"
                    Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}" />

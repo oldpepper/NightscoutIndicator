@@ -9,15 +9,8 @@ using FontStyle = System.Drawing.FontStyle;
 
 namespace NightscoutIndicator;
 
-public class DynamicTrayIconFactory : IDisposable
+public class DynamicTrayIconFactory
 {
-    private IntPtr _currentGlucoseIconHandle;
-    private IntPtr _currentTrendIconHandle;
-
-    private Icon _currentGlucoseIcon;
-    private Icon _currentTrendIcon;
-    //    private IntPtr _currentHandle;
-
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     public static extern bool DestroyIcon(IntPtr handle);
 
@@ -64,22 +57,7 @@ public class DynamicTrayIconFactory : IDisposable
         g.DrawString(text, font, isOld ? Brushes.Orchid : Brushes.White, 0, -6);
         g.ResetTransform(); // Important!
 
-        if (_currentGlucoseIcon != null)
-        {
-            _currentGlucoseIcon.Dispose(); // releases the Icon only if it owns the handle
-            _currentGlucoseIcon = null;
-        }
-        
-        if (_currentTrendIconHandle != IntPtr.Zero)
-        {
-            DestroyIcon(_currentTrendIconHandle);
-            _currentTrendIconHandle = IntPtr.Zero;
-        }
-
-        _currentTrendIconHandle = bmp.GetHicon();
-        _currentTrendIcon = Icon.FromHandle(_currentTrendIconHandle);
-
-        return _currentTrendIcon;
+        return CreateOwnedIcon(bmp);
     }
 
     public Icon CreateTrendIcon(NightscoutTrend trend, Color color)
@@ -107,49 +85,24 @@ public class DynamicTrayIconFactory : IDisposable
         // It can be saved or used as an ImageSource for WPF
 
 
-        if (_currentGlucoseIcon != null)
-        {
-            _currentGlucoseIcon.Dispose(); // releases the Icon only if it owns the handle
-            _currentGlucoseIcon = null;
-        }
-        
-        if (_currentTrendIconHandle != IntPtr.Zero)
-        {
-            DestroyIcon(_currentTrendIconHandle);
-            _currentTrendIconHandle = IntPtr.Zero;
-        }
-
-        _currentTrendIconHandle = bmp.GetHicon();
-        _currentTrendIcon = Icon.FromHandle(_currentTrendIconHandle);
-
-        return _currentTrendIcon;
+        return CreateOwnedIcon(bmp);
     }
 
-    public void Dispose()
+    /// <summary>
+    /// Creates an icon that owns its handle from the bitmap.
+    /// </summary>
+    private static Icon CreateOwnedIcon(Bitmap bmp)
     {
-        if (_currentGlucoseIcon != null)
+        var handle = bmp.GetHicon();
+        try
         {
-            _currentGlucoseIcon.Dispose(); // releases the Icon only if it owns the handle
-            _currentGlucoseIcon = null;
+            // Icon.FromHandle does not own the handle, so clone it and destroy the original
+            using var icon = Icon.FromHandle(handle);
+            return (Icon)icon.Clone();
         }
-
-        if (_currentTrendIconHandle != IntPtr.Zero)
+        finally
         {
-            DestroyIcon(_currentTrendIconHandle);
-            _currentTrendIconHandle = IntPtr.Zero;
-        }
-        
-        
-        if (_currentTrendIcon != null)
-        {
-            _currentTrendIcon.Dispose(); // releases the Icon only if it owns the handle
-            _currentTrendIcon = null;
-        }
-
-        if (_currentGlucoseIconHandle != IntPtr.Zero)
-        {
-            DestroyIcon(_currentGlucoseIconHandle);
-            _currentGlucoseIconHandle = IntPtr.Zero;
+            DestroyIcon(handle);
         }
     }
 }

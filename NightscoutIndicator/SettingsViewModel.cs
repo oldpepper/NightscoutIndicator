@@ -81,10 +81,6 @@ public partial class SettingsViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(HasError))]
     private string _errorText;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasDevelopmentOverrides))]
-    private string _developmentOverridesText;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="SettingsViewModel"/> class.
     /// </summary>
@@ -115,11 +111,6 @@ public partial class SettingsViewModel : ObservableObject
     public bool HasError => !string.IsNullOrEmpty(ErrorText);
 
     /// <summary>
-    /// Whether some settings are overridden by the developer settings file.
-    /// </summary>
-    public bool HasDevelopmentOverrides => !string.IsNullOrEmpty(DevelopmentOverridesText);
-
-    /// <summary>
     /// Loads the editable fields from the current settings.
     /// </summary>
     public void Load()
@@ -143,13 +134,6 @@ public partial class SettingsViewModel : ObservableObject
         AlarmLowFileName = _settings.AlarmLowFileName;
         FlyingIndicatorSize = ToText(_settings.FlyingIndicatorSize);
         ErrorText = null;
-
-        var overriddenKeys = GetDevelopmentOverrides().Keys.ToList();
-        DevelopmentOverridesText = overriddenKeys.Count == 0
-                                       ? null
-                                       : $"Debug build: {string.Join(", ", overriddenKeys)} come from {UserSettingsFile.DEVELOPMENT_FILE_NAME}. " +
-                                         "Unchanged values are not copied to user settings; changed ones are saved, " +
-                                         "but the developer file still wins after restart.";
     }
 
     [RelayCommand]
