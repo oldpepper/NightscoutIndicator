@@ -12,7 +12,6 @@
 
   <ItemGroup>
     <None Remove="Icon\icon-normal.ico" />
-    <None Remove="Icon\icon-red.ico" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,9 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Resource Include="Icon\icon-red.ico">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </Resource>
     <Resource Include="Icon\icon-normal.ico">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </Resource>
@@ -70,6 +66,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Icon\arrow-up2.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Icon\icon-red.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

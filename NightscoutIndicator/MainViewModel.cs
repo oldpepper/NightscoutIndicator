@@ -160,7 +160,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         _notifyIconGlucose.Visible = true;
 
         var oldTrendIcon = _notifyIconTrend.Icon;
-        var iconTrend = _dynamicTrayIconFactory.CreateTrendIcon(latestEntry?.Trend ?? NightscoutTrend.None, _diaCalculations.CalculateLevelDrawingColor(level));
+        var iconTrend = _dynamicTrayIconFactory.CreateTrendIcon(_settings.GetTrendIconFileName(latestEntry?.Trend ?? NightscoutTrend.None), _diaCalculations.CalculateLevelDrawingColor(level));
         _notifyIconTrend.Icon = iconTrend;
         oldTrendIcon?.Dispose();
         _notifyIconTrend.Text = latestEntry is null ? "null" : latestEntry.Value.ToString("F1");

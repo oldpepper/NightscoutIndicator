@@ -40,6 +40,12 @@
             <Setter Property="MinWidth" Value="80" />
             <Setter Property="Padding" Value="8,2" />
         </Style>
+        <Style x:Key="SmallButtonStyle" TargetType="Button">
+            <Setter Property="Margin" Value="2" />
+            <Setter Property="MinWidth" Value="0" />
+            <Setter Property="Width" Value="26" />
+            <Setter Property="Padding" Value="0" />
+        </Style>
     </Window.Resources>
 
     <StackPanel Margin="0,4,0,8">
@@ -147,10 +153,46 @@
                 <TextBox Grid.Row="1" Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding AlarmInterval, UpdateSourceTrigger=PropertyChanged}" />
 
                 <Label Grid.Row="2" Grid.Column="0" Content="High alarm sound file" />
-                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding AlarmHiFileName, UpdateSourceTrigger=PropertyChanged}" />
+                <Grid Grid.Row="2" Grid.Column="1" DataContext="{Binding AlarmHiSound}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0" Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Grid.Column="1" Style="{StaticResource SmallButtonStyle}"
+                            Content="▶" Foreground="Green" ToolTip="Play sound"
+                            Command="{Binding PlayCommand}" />
+                    <Button Grid.Column="2" Style="{StaticResource SmallButtonStyle}"
+                            Content="..." ToolTip="Select sound file"
+                            Command="{Binding BrowseCommand}" />
+                    <Button Grid.Column="3" Style="{StaticResource SmallButtonStyle}"
+                            Content="✕" Foreground="Red" FontWeight="Bold" ToolTip="Reset to default sound"
+                            Command="{Binding ResetCommand}" />
+                </Grid>
 
                 <Label Grid.Row="3" Grid.Column="0" Content="Low alarm sound file" />
-                <TextBox Grid.Row="3" Grid.Column="1" Text="{Binding AlarmLowFileName, UpdateSourceTrigger=PropertyChanged}" />
+                <Grid Grid.Row="3" Grid.Column="1" DataContext="{Binding AlarmLowSound}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBox Grid.Column="0" Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" />
+                    <Button Grid.Column="1" Style="{StaticResource SmallButtonStyle}"
+                            Content="▶" Foreground="Green" ToolTip="Play sound"
+                            Command="{Binding PlayCommand}" />
+                    <Button Grid.Column="2" Style="{StaticResource SmallButtonStyle}"
+                            Content="..." ToolTip="Select sound file"
+                            Command="{Binding BrowseCommand}" />
+                    <Button Grid.Column="3" Style="{StaticResource SmallButtonStyle}"
+                            Content="✕" Foreground="Red" FontWeight="Bold" ToolTip="Reset to default sound"
+                            Command="{Binding ResetCommand}" />
+                </Grid>
             </Grid>
         </GroupBox>
 
@@ -164,6 +206,38 @@
                 <Label Grid.Column="0" Content="Size, px" />
                 <TextBox Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding FlyingIndicatorSize, UpdateSourceTrigger=PropertyChanged}" />
             </Grid>
+        </GroupBox>
+
+        <GroupBox Header="Tray trend icons">
+            <ItemsControl ItemsSource="{Binding TrendIcons}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:IconFileViewModel}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="180" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Label Grid.Column="0" Content="{Binding Title}" />
+                            <TextBox Grid.Column="1" Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" />
+                            <!-- Gray background, as the tray draws the icon over the glucose zone color -->
+                            <Border Grid.Column="2" Margin="2" Width="26" Height="26" Background="DimGray"
+                                    ToolTip="Icon preview">
+                                <Image Width="24" Height="24" Source="{Binding Preview}" />
+                            </Border>
+                            <Button Grid.Column="3" Style="{StaticResource SmallButtonStyle}"
+                                    Content="..." ToolTip="Select icon file"
+                                    Command="{Binding BrowseCommand}" />
+                            <Button Grid.Column="4" Style="{StaticResource SmallButtonStyle}"
+                                    Content="✕" Foreground="Red" FontWeight="Bold" ToolTip="Reset to default icon"
+                                    Command="{Binding ResetCommand}" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
         </GroupBox>
 
         <TextBlock Margin="12,4" TextWrapping="Wrap" Foreground="Firebrick"

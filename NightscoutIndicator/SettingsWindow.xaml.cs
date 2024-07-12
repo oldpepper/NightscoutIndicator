@@ -38,6 +38,7 @@ namespace NightscoutIndicator
         {
             // The view model is a singleton and outlives the window
             _viewModel.CloseRequestedEvent -= ViewModel_OnCloseRequestedEvent;
+            _viewModel.StopSounds();
 
             base.OnClosed(e);
         }

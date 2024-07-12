@@ -69,12 +69,6 @@ public partial class SettingsViewModel : ObservableObject
     private string _alarmInterval;
 
     [ObservableProperty]
-    private string _alarmHiFileName;
-
-    [ObservableProperty]
-    private string _alarmLowFileName;
-
-    [ObservableProperty]
     private string _flyingIndicatorSize;
 
     [ObservableProperty]
@@ -106,6 +100,29 @@ public partial class SettingsViewModel : ObservableObject
     public NightscoutUnit[] Units { get; } = Enum.GetValues<NightscoutUnit>();
 
     /// <summary>
+    /// High alarm sound file.
+    /// </summary>
+    public SoundFileViewModel AlarmHiSound { get; } = new("High alarm sound", x => x.AlarmHiFileName, (x, v) => x.AlarmHiFileName = v);
+
+    /// <summary>
+    /// Low alarm sound file.
+    /// </summary>
+    public SoundFileViewModel AlarmLowSound { get; } = new("Low alarm sound", x => x.AlarmLowFileName, (x, v) => x.AlarmLowFileName = v);
+
+    /// <summary>
+    /// Trend icon files.
+    /// </summary>
+    public IconFileViewModel[] TrendIcons { get; } =
+    [
+        new("Rising fast", x => x.TrendIconUp, (x, v) => x.TrendIconUp = v),
+        new("Rising", x => x.TrendIconUpRight, (x, v) => x.TrendIconUpRight = v),
+        new("Stable", x => x.TrendIconFlat, (x, v) => x.TrendIconFlat = v),
+        new("Falling", x => x.TrendIconDownRight, (x, v) => x.TrendIconDownRight = v),
+        new("Falling fast", x => x.TrendIconDown, (x, v) => x.TrendIconDown = v),
+        new("Error", x => x.TrendIconUnknown, (x, v) => x.TrendIconUnknown = v)
+    ];
+
+    /// <summary>
     /// Whether there is a validation error.
     /// </summary>
     public bool HasError => !string.IsNullOrEmpty(ErrorText);
@@ -130,9 +147,16 @@ public partial class SettingsViewModel : ObservableObject
         FontSize = ToText(_settings.FontSize);
         UseAlarm = _settings.UseAlarm;
         AlarmInterval = ToText(_settings.AlarmInterval);
-        AlarmHiFileName = _settings.AlarmHiFileName;
-        AlarmLowFileName = _settings.AlarmLowFileName;
         FlyingIndicatorSize = ToText(_settings.FlyingIndicatorSize);
+
+        var defaults = NightscoutIndicatorSettings.LoadDefaults();
+        AlarmHiSound.Load(_settings, defaults);
+        AlarmLowSound.Load(_settings, defaults);
+        foreach (var trendIcon in TrendIcons)
+        {
+            trendIcon.Load(_settings, defaults);
+        }
+
         ErrorText = null;
     }
 
@@ -174,15 +198,21 @@ public partial class SettingsViewModel : ObservableObject
 
         newSettings.UseAlarm = UseAlarm;
         newSettings.AlarmInterval = (double)ParsePositiveDecimal(AlarmInterval, "Alarm interval", errors);
-        newSettings.AlarmHiFileName = AlarmHiFileName?.Trim() ?? string.Empty;
-        newSettings.AlarmLowFileName = AlarmLowFileName?.Trim() ?? string.Empty;
+        AlarmHiSound.Store(newSettings);
+        AlarmLowSound.Store(newSettings);
         if (newSettings.UseAlarm)
         {
-            CheckAlarmFile(newSettings.AlarmHiFileName, "High alarm sound", errors);
-            CheckAlarmFile(newSettings.AlarmLowFileName, "Low alarm sound", errors);
+            CheckAlarmFile(newSettings.AlarmHiFileName, AlarmHiSound.Title, errors);
+            CheckAlarmFile(newSettings.AlarmLowFileName, AlarmLowSound.Title, errors);
         }
 
         newSettings.FlyingIndicatorSize = ParsePositiveInt(FlyingIndicatorSize, "Indicator size", errors);
+
+        foreach (var trendIcon in TrendIcons)
+        {
+            trendIcon.Store(newSettings);
+            CheckIconFile(trendIcon.FileName, $"{trendIcon.Title} icon", errors);
+        }
 
         if (errors.Count > 0)
         {
@@ -203,6 +233,7 @@ public partial class SettingsViewModel : ObservableObject
         _settings.CopyFrom(newSettings);
         ErrorText = null;
 
+        StopSounds();
         SettingsSavedEvent?.Invoke();
         CloseRequestedEvent?.Invoke();
     }
@@ -210,7 +241,17 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void Cancel()
     {
+        StopSounds();
         CloseRequestedEvent?.Invoke();
+    }
+
+    /// <summary>
+    /// Stops the sound playback.
+    /// </summary>
+    public void StopSounds()
+    {
+        AlarmHiSound.Stop();
+        AlarmLowSound.Stop();
     }
 
     /// <summary>
@@ -327,6 +368,31 @@ public partial class SettingsViewModel : ObservableObject
         }
 
         return value;
+    }
+
+    private static void CheckIconFile(string fileName, string name, List<string> errors)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            errors.Add($"{name} file is not set.");
+            return;
+        }
+
+        var fullPath = NightscoutIndicatorSettings.GetFullPath(fileName.Trim());
+        if (!File.Exists(fullPath))
+        {
+            errors.Add($"{name} file not found: {fileName}.");
+            return;
+        }
+
+        try
+        {
+            using var icon = new System.Drawing.Icon(fullPath, 32, 32);
+        }
+        catch (Exception)
+        {
+            errors.Add($"{name} file is not a valid icon: {fileName}.");
+        }
     }
 
     private static void CheckAlarmFile(string fileName, string name, List<string> errors)

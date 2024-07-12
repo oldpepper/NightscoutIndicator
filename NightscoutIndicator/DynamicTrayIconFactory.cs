@@ -60,26 +60,23 @@ public class DynamicTrayIconFactory
         return CreateOwnedIcon(bmp);
     }
 
-    public Icon CreateTrendIcon(NightscoutTrend trend, Color color)
+    public Icon CreateTrendIcon(string iconFileName, Color color)
     {
-        var icoFileName = trend switch
-        {
-            NightscoutTrend.DoubleUp => "Icon\\arrow-up2.ico",
-            NightscoutTrend.FortyFiveUp => "Icon\\arrow-up-right2.ico",
-            NightscoutTrend.Flat => "Icon\\arrow-right2.ico",
-            NightscoutTrend.FortyFiveDown => "Icon\\arrow-down-right2.ico",
-            NightscoutTrend.DoubleDown => "Icon\\arrow-down2.ico",
-            _ => "Icon\\icon-red.ico"
-        };
-
-        using var icon = new Icon(icoFileName, 32, 32);
         using var bmp = new Bitmap(32, 32, PixelFormat.Format32bppArgb);
         using var g = Graphics.FromImage(bmp);
 
         g.Clear(color);
 
-        // 1. Draw the icon in the top-left corner or center it if needed
-        g.DrawIcon(icon, new Rectangle(0, 0, 32, 32));
+        // A missing or broken icon file leaves only the zone color instead of breaking the tray update
+        try
+        {
+            using var icon = new Icon(NightscoutIndicatorSettings.GetFullPath(iconFileName), 32, 32);
+            g.DrawIcon(icon, new Rectangle(0, 0, 32, 32));
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
 
         // 3. bmp2 contains your image with the icon and text!
         // It can be saved or used as an ImageSource for WPF
