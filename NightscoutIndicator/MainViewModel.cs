@@ -35,6 +35,8 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     private NotifyIcon _notifyIconGlucose;
     private NotifyIcon _notifyIconTrend;
     private NightscoutEntry _latestEntry;
+    private WaveOutEvent _alarmPlayer;
+    private MediaFoundationReader _alarmReader;
     private readonly DataReceiver _dataReceiver;
     private readonly DiagramViewModel _diagramViewModel;
     private readonly FlyingIndicatorViewModel _flyingIndicatorViewModel;
@@ -96,20 +98,48 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     private void SettingsViewModel_OnSettingsSavedEvent()
     {
         _flyingIndicatorViewModel.ApplySettings();
-        _ = UpdateLastData(_latestEntry);
+        UpdateLastData(_latestEntry);
     }
 
     private void DataReceiver_OnDataExpiredEvent()
     {
-        UpdateLastData(_latestEntry);
+        RunOnUiThread(() => UpdateLastData(_latestEntry));
     }
 
     private void DataReceiver_OnDataReceivedEvent(List<NightscoutEntry> entries)
     {
-        if (entries.Any())
+        if (!entries.Any())
         {
-            _latestEntry = entries.FirstOrDefault();
+            return;
+        }
+
+        var latestEntry = entries.FirstOrDefault();
+        RunOnUiThread(() =>
+        {
+            _latestEntry = latestEntry;
             UpdateLastData(_latestEntry);
+        });
+    }
+
+    /// <summary>
+    /// Runs the action on the UI thread.
+    /// </summary>
+    private static void RunOnUiThread(Action action)
+    {
+        // DataReceiver raises its events on a thread pool thread, while tray icons, sounds and message boxes belong to the UI thread
+        var dispatcher = Application.Current?.Dispatcher;
+        if (dispatcher == null || dispatcher.HasShutdownStarted)
+        {
+            return;
+        }
+
+        if (dispatcher.CheckAccess())
+        {
+            action();
+        }
+        else
+        {
+            dispatcher.BeginInvoke(action);
         }
     }
 
@@ -142,8 +172,13 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         _notifyIconTrend.Visible = true;
     }
 
-    private async Task UpdateLastData(NightscoutEntry latestEntry)
+    private void UpdateLastData(NightscoutEntry latestEntry)
     {
+        if (_notifyIconGlucose == null || _notifyIconTrend == null)
+        {
+            return;
+        }
+
 //        if (latestEntry is null)
 //        {
 //            return;
@@ -208,16 +243,44 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
 
             if (File.Exists(alarm))
             {
-                var waveOut = new WaveOut();
-                var audioFileReader = new MediaFoundationReader(alarm);
-                waveOut.Init(audioFileReader);
-                waveOut.Play();
+                StopAlarm();
+
+                _alarmReader = new MediaFoundationReader(alarm);
+                _alarmPlayer = new WaveOutEvent();
+                _alarmPlayer.PlaybackStopped += AlarmPlayer_OnPlaybackStopped;
+                _alarmPlayer.Init(_alarmReader);
+                _alarmPlayer.Play();
                 _lastAlarmDate = DateTimeOffset.Now;
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Error playng sound {_settings.AlarmHiFileName} :\n{ex.Message}");
+            StopAlarm();
+            MessageBox.Show($"Error playing sound {fileName}:\n{ex.Message}");
+        }
+    }
+
+    private void AlarmPlayer_OnPlaybackStopped(object sender, StoppedEventArgs e)
+    {
+        StopAlarm();
+    }
+
+    /// <summary>
+    /// Stops the alarm sound and releases the player.
+    /// </summary>
+    private void StopAlarm()
+    {
+        if (_alarmPlayer != null)
+        {
+            _alarmPlayer.PlaybackStopped -= AlarmPlayer_OnPlaybackStopped;
+            _alarmPlayer.Dispose();
+            _alarmPlayer = null;
+        }
+
+        if (_alarmReader != null)
+        {
+            _alarmReader.Dispose();
+            _alarmReader = null;
         }
     }
 
@@ -249,6 +312,9 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     public void Dispose()
     {
         _settingsViewModel.SettingsSavedEvent -= SettingsViewModel_OnSettingsSavedEvent;
+        _dataReceiver.DataReceivedEvent -= DataReceiver_OnDataReceivedEvent;
+        _dataReceiver.DataExpiredEvent -= DataReceiver_OnDataExpiredEvent;
+        StopAlarm();
         _nightscoutClient?.Dispose();
         
         
