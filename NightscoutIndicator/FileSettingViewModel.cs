@@ -16,6 +16,7 @@ public abstract partial class FileSettingViewModel : ObservableObject
     private readonly Action<NightscoutIndicatorSettings, string> _setValue;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ResetCommand))]
     private string _fileName;
 
     /// <summary>
@@ -55,8 +56,9 @@ public abstract partial class FileSettingViewModel : ObservableObject
     /// </summary>
     public void Load(NightscoutIndicatorSettings settings, NightscoutIndicatorSettings defaults)
     {
-        FileName = _getValue(settings);
         DefaultFileName = _getValue(defaults);
+        FileName = _getValue(settings);
+        ResetCommand.NotifyCanExecuteChanged();
     }
 
     /// <summary>
@@ -101,9 +103,25 @@ public abstract partial class FileSettingViewModel : ObservableObject
         }
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanReset))]
     private void Reset()
     {
         FileName = DefaultFileName;
+    }
+
+    private bool CanReset()
+    {
+        // Relative and absolute forms of the same file are treated as equal
+        var defaultFullPath = NightscoutIndicatorSettings.GetFullPath(DefaultFileName?.Trim());
+
+        try
+        {
+            return !string.Equals(Path.GetFullPath(FullPath), Path.GetFullPath(defaultFullPath), StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception)
+        {
+            // An invalid path typed by the user is never the default one
+            return true;
+        }
     }
 }

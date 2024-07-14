@@ -152,7 +152,7 @@
                 <Label Grid.Row="1" Grid.Column="0" Content="Repeat not more often, min" />
                 <TextBox Grid.Row="1" Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding AlarmInterval, UpdateSourceTrigger=PropertyChanged}" />
 
-                <Label Grid.Row="2" Grid.Column="0" Content="High alarm sound file" />
+                <Label Grid.Row="2" Grid.Column="0" Content="High glucose alarm sound file" />
                 <Grid Grid.Row="2" Grid.Column="1" DataContext="{Binding AlarmHiSound}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -173,7 +173,7 @@
                             Command="{Binding ResetCommand}" />
                 </Grid>
 
-                <Label Grid.Row="3" Grid.Column="0" Content="Low alarm sound file" />
+                <Label Grid.Row="3" Grid.Column="0" Content="Low glucose alarm sound file" />
                 <Grid Grid.Row="3" Grid.Column="1" DataContext="{Binding AlarmLowSound}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
