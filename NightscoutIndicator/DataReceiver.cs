@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using System.Net.Http;
+using Microsoft.Extensions.Options;
 using NightscoutIndicator.Nightscout;
 
 namespace NightscoutIndicator;
@@ -12,6 +13,11 @@ public class DataReceiver : IDisposable
 
     public event Action<List<NightscoutEntry>> DataReceivedEvent;
     public event Action DataExpiredEvent;
+
+    /// <summary>
+    /// Server request error event.
+    /// </summary>
+    public event Action<string> DataErrorEvent;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DataReceiver"/> class.
@@ -37,7 +43,7 @@ public class DataReceiver : IDisposable
         }
         catch (Exception ex)
         {
-            //            MessageBox.Show($"Error calling GetLatestEntriesAsync:\n{ex.Message}");
+            FireDataErrorEvent(GetErrorText(ex));
         }
         finally
         {
@@ -67,6 +73,32 @@ public class DataReceiver : IDisposable
         {
             // ignored
         }
+    }
+
+    public void FireDataErrorEvent(string errorText)
+    {
+        try
+        {
+            DataErrorEvent?.Invoke(errorText);
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+    }
+
+    /// <summary>
+    /// Gets a short description of the server request error.
+    /// </summary>
+    private static string GetErrorText(Exception exception)
+    {
+        return exception switch
+        {
+            NightscoutException => exception.Message,
+            TaskCanceledException => "Server timeout",
+            HttpRequestException => $"Server unavailable: {exception.Message}",
+            _ => exception.Message
+        };
     }
 
     public void FireDataExpiredEvent()

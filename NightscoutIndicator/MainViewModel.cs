@@ -37,6 +37,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     private NightscoutEntry _latestEntry;
     private WaveOutEvent _alarmPlayer;
     private MediaFoundationReader _alarmReader;
+    private string _lastErrorText;
     private readonly DataReceiver _dataReceiver;
     private readonly DiagramViewModel _diagramViewModel;
     private readonly FlyingIndicatorViewModel _flyingIndicatorViewModel;
@@ -72,6 +73,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         _settingsViewModel.SettingsSavedEvent += SettingsViewModel_OnSettingsSavedEvent;
         _dataReceiver.DataReceivedEvent += DataReceiver_OnDataReceivedEvent;
         _dataReceiver.DataExpiredEvent += DataReceiver_OnDataExpiredEvent;
+        _dataReceiver.DataErrorEvent += DataReceiver_OnDataErrorEvent;
     }
 
     private void ShowSettingsWindow()
@@ -108,17 +110,44 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
 
     private void DataReceiver_OnDataReceivedEvent(List<NightscoutEntry> entries)
     {
-        if (!entries.Any())
-        {
-            return;
-        }
-
         var latestEntry = entries.FirstOrDefault();
         RunOnUiThread(() =>
         {
-            _latestEntry = latestEntry;
+            // A successful response clears the last error even if it has no entries
+            _lastErrorText = null;
+            if (latestEntry != null)
+            {
+                _latestEntry = latestEntry;
+            }
+
             UpdateLastData(_latestEntry);
         });
+    }
+
+    private void DataReceiver_OnDataErrorEvent(string errorText)
+    {
+        RunOnUiThread(() =>
+        {
+            _lastErrorText = errorText;
+            UpdateLastData(_latestEntry);
+        });
+    }
+
+    /// <summary>
+    /// Gets the tray icon tooltip text.
+    /// </summary>
+    private string GetTooltipText(NightscoutEntry latestEntry)
+    {
+        // NotifyIcon.Text accepts at most 127 characters
+        const int MAX_LENGTH = 127;
+
+        var text = latestEntry is null ? "null" : latestEntry.Value.ToString("F1");
+        if (!string.IsNullOrEmpty(_lastErrorText))
+        {
+            text += $"{Environment.NewLine}No data: {_lastErrorText}";
+        }
+
+        return text.Length <= MAX_LENGTH ? text : text.Substring(0, MAX_LENGTH);
     }
 
     /// <summary>
@@ -191,14 +220,14 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         var iconGlucose = _dynamicTrayIconFactory.CreateGlucoseBitmapSource(latestEntry?.Value.ToString("0.#"), isExpired);
         _notifyIconGlucose.Icon = iconGlucose;
         oldGlucoseIcon?.Dispose();
-        _notifyIconGlucose.Text = latestEntry is null ? "null" : latestEntry.Value.ToString("F1");
+        _notifyIconGlucose.Text = GetTooltipText(latestEntry);
         _notifyIconGlucose.Visible = true;
 
         var oldTrendIcon = _notifyIconTrend.Icon;
         var iconTrend = _dynamicTrayIconFactory.CreateTrendIcon(_settings.GetTrendIconFileName(latestEntry?.Trend ?? NightscoutTrend.None), _diaCalculations.CalculateLevelDrawingColor(level));
         _notifyIconTrend.Icon = iconTrend;
         oldTrendIcon?.Dispose();
-        _notifyIconTrend.Text = latestEntry is null ? "null" : latestEntry.Value.ToString("F1");
+        _notifyIconTrend.Text = GetTooltipText(latestEntry);
         _notifyIconTrend.Visible = true;
 
         CheckRaiseAlarm(latestEntry);
@@ -314,6 +343,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         _settingsViewModel.SettingsSavedEvent -= SettingsViewModel_OnSettingsSavedEvent;
         _dataReceiver.DataReceivedEvent -= DataReceiver_OnDataReceivedEvent;
         _dataReceiver.DataExpiredEvent -= DataReceiver_OnDataExpiredEvent;
+        _dataReceiver.DataErrorEvent -= DataReceiver_OnDataErrorEvent;
         StopAlarm();
         _nightscoutClient?.Dispose();
         
