@@ -5,14 +5,12 @@ using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
-using PropertyChanged;
 
 namespace NightscoutIndicator;
 
 /// <summary>
 /// Icon file setting view model.
 /// </summary>
-[DoNotNotify]
 public partial class IconFileViewModel : FileSettingViewModel
 {
     [ObservableProperty]

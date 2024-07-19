@@ -2,14 +2,12 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
-using PropertyChanged;
 
 namespace NightscoutIndicator;
 
 /// <summary>
 /// File setting view model.
 /// </summary>
-[DoNotNotify]
 public abstract partial class FileSettingViewModel : ObservableObject
 {
     private readonly Func<NightscoutIndicatorSettings, string> _getValue;

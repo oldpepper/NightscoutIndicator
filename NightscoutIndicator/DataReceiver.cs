@@ -56,9 +56,9 @@ public class DataReceiver : IDisposable
                     FireDataExpiredEvent();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                //                MessageBox.Show($"Failed tu setup timer to {_mainViewModel?.Settings?.UpdateInterval} update interval:\n{ex.Message}");
+                // ignored
             }
         }
     }

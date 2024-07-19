@@ -1,4 +1,4 @@
-using System.Globalization;
+﻿using System.Globalization;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -10,14 +10,12 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using NightscoutIndicator.Nightscout;
 using NightscoutIndicator.SettingsManagement;
-using PropertyChanged;
 
 namespace NightscoutIndicator;
 
 /// <summary>
 /// Settings window view model.
 /// </summary>
-[DoNotNotify]
 public partial class SettingsViewModel : ObservableObject
 {
     private readonly NightscoutIndicatorSettings _settings;

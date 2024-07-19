@@ -2,14 +2,12 @@
 using System.Windows;
 using CommunityToolkit.Mvvm.Input;
 using NAudio.Wave;
-using PropertyChanged;
 
 namespace NightscoutIndicator;
 
 /// <summary>
 /// Sound file setting view model.
 /// </summary>
-[DoNotNotify]
 public partial class SoundFileViewModel : FileSettingViewModel
 {
     private WaveOutEvent _player;

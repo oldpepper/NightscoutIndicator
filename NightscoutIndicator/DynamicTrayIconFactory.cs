@@ -23,8 +23,6 @@ public class DynamicTrayIconFactory
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     public static extern bool DestroyIcon(IntPtr handle);
 
-    [System.Runtime.InteropServices.DllImport("gdi32.dll")]
-    public static extern bool DeleteObject(IntPtr hObject);
     [DllImport("Shcore.dll")]
     public static extern int GetDpiForMonitor(IntPtr hmonitor, MonitorDpiType dpiType, out uint dpiX, out uint dpiY);
 

@@ -11,9 +11,6 @@ namespace NightscoutIndicator;
 
 public partial class FlyingIndicatorViewModel : INotifyPropertyChanged, IDisposable
 {
-    private readonly NightscoutClient _nightscoutClient;
-    private bool _isDiagramOpened;
-    private GlucoseDiagram _diagram;
     private readonly NightscoutIndicatorSettings _settings;
     private readonly DataReceiver _dataReceiver;
     private readonly IWritableOptions<FlyingIndicatorWindowSettings> _windowSettingsWritableOptions;
@@ -30,8 +27,6 @@ public partial class FlyingIndicatorViewModel : INotifyPropertyChanged, IDisposa
     private NightscoutEntry _lastNightscoutEntry;
     private readonly FlyingIndicatorWindow _flyingIndicatorView;
     private readonly Timer _saveWindowSettingsDelayTimer;
-
-    public event Action<FlyingIndicatorWindowSettings> IndicatorWindowSettingsChangedEvent;
 
     public RelayCommand ShowWindowCommand { get; }
 //    public RelayCommand ShowDiagramCommand { get; }
@@ -136,7 +131,7 @@ public partial class FlyingIndicatorViewModel : INotifyPropertyChanged, IDisposa
     [RelayCommand]
     private async Task ShowDiagram()
     {
-        _diagramViewModel.ShowDiagramAsync(_diagram, null);
+        _diagramViewModel.ShowDiagramAsync(null, null);
     }
 
     private void WindowSettings_OnPropertyChanged(object sender, PropertyChangedEventArgs e)
