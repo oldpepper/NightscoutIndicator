@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
@@ -217,7 +218,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
 
         var oldGlucoseIcon = _notifyIconGlucose.Icon;
         var isExpired = latestEntry is null || DateTimeOffset.Now - latestEntry.Timestamp > TimeSpan.FromMinutes(_settings.DataExpirationTimeout);
-        var iconGlucose = _dynamicTrayIconFactory.CreateGlucoseBitmapSource(latestEntry?.Value.ToString("0.#"), isExpired);
+        var iconGlucose = _dynamicTrayIconFactory.CreateGlucoseBitmapSource(latestEntry?.Value.ToString("0.#", CultureInfo.InvariantCulture), isExpired);
         _notifyIconGlucose.Icon = iconGlucose;
         oldGlucoseIcon?.Dispose();
         _notifyIconGlucose.Text = GetTooltipText(latestEntry);

@@ -1,5 +1,7 @@
 ﻿using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
+using System.Drawing.Text;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -11,6 +13,13 @@ namespace NightscoutIndicator;
 
 public class DynamicTrayIconFactory
 {
+    private const string GLUCOSE_FONT_NAME = "League Gothic";
+    private const string GLUCOSE_FONT_FILE_NAME = @"Fonts\LeagueGothic-Regular.ttf";
+
+    // The collection must stay alive while its font family is used
+    private static readonly PrivateFontCollection _privateFonts = new();
+    private static readonly FontFamily _glucoseFontFamily = LoadGlucoseFontFamily();
+
     [DllImport("user32.dll", CharSet = CharSet.Auto)]
     public static extern bool DestroyIcon(IntPtr handle);
 
@@ -42,20 +51,18 @@ public class DynamicTrayIconFactory
     
     public Icon CreateGlucoseBitmapSource(string text, bool isOld = false)
     {
-        using var bmp = new Bitmap(32, 32, PixelFormat.Format32bppArgb);
+        // The icon is rendered at the tray icon size of the primary monitor, so the tray does not rescale it
+        var size = Math.Max(16, (int)Math.Round(16 * GetScaleFactorForMainDisplay()));
+        using var bmp = new Bitmap(size, size, PixelFormat.Format32bppArgb);
         using var g = Graphics.FromImage(bmp);
 
         g.Clear(Color.Transparent);
-        using var font = new Font("League Gothic", 18, FontStyle.Bold);
+        g.SmoothingMode = SmoothingMode.AntiAlias;
 
-        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
-        var scaleFactor = GetScaleFactorForMainDisplay();
-        g.ScaleTransform(0.8f/ scaleFactor, 1.7f/ scaleFactor); // Shrink width to 80%, stretch height by 70%
-        var textSize = g.MeasureString(text, font);
-        var x = (bmp.Width - textSize.Width) / 2f;
-        var y = (bmp.Height - textSize.Height) / 2f;
-        g.DrawString(text, font, isOld ? Brushes.Orchid : Brushes.White, 0, -6);
-        g.ResetTransform(); // Important!
+        if (!string.IsNullOrEmpty(text))
+        {
+            DrawFittedText(g, text, size, isOld ? Brushes.Orchid : Brushes.White);
+        }
 
         return CreateOwnedIcon(bmp);
     }
@@ -83,6 +90,66 @@ public class DynamicTrayIconFactory
 
 
         return CreateOwnedIcon(bmp);
+    }
+
+    /// <summary>
+    /// Draws the text stretched to the full height of the icon.
+    /// </summary>
+    private static void DrawFittedText(Graphics g, string text, int size, Brush brush)
+    {
+        // The text outline gives the exact glyph bounds without the empty space above and below the digits
+        using var path = new GraphicsPath();
+        path.AddString(text, _glucoseFontFamily, (int)FontStyle.Regular, 100f, PointF.Empty, StringFormat.GenericTypographic);
+
+        var bounds = path.GetBounds();
+        if (bounds.Width <= 0 || bounds.Height <= 0)
+        {
+            return;
+        }
+
+        // The digits fill the whole height without a margin, as the trend icon does; long values are narrowed to fit the width, short ones keep their proportions
+        float available = size;
+        var scaleY = available / bounds.Height;
+        var scaleX = Math.Min(scaleY, available / bounds.Width);
+
+        // Matrix operations are prepended, so they apply to the points in reverse order
+        using var matrix = new Matrix();
+        matrix.Translate(size / 2f, size / 2f);
+        matrix.Scale(scaleX, scaleY);
+        matrix.Translate(-(bounds.X + bounds.Width / 2f), -(bounds.Y + bounds.Height / 2f));
+        path.Transform(matrix);
+
+        g.FillPath(brush, path);
+    }
+
+    /// <summary>
+    /// Loads the glucose font family.
+    /// </summary>
+    private static FontFamily LoadGlucoseFontFamily()
+    {
+        // The font shipped with the application is preferred, then the installed one, then the default sans serif font
+        var fontPath = NightscoutIndicatorSettings.GetFullPath(GLUCOSE_FONT_FILE_NAME);
+        if (File.Exists(fontPath))
+        {
+            try
+            {
+                _privateFonts.AddFontFile(fontPath);
+                return _privateFonts.Families[0];
+            }
+            catch (Exception)
+            {
+                // ignored
+            }
+        }
+
+        try
+        {
+            return new FontFamily(GLUCOSE_FONT_NAME);
+        }
+        catch (ArgumentException)
+        {
+            return FontFamily.GenericSansSerif;
+        }
     }
 
     /// <summary>
