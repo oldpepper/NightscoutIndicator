@@ -146,7 +146,14 @@ public partial class FlyingIndicatorViewModel : INotifyPropertyChanged, IDisposa
 
     private void SaveIndicatorPosition(object _)
     {
-        _windowSettingsWritableOptions.UpdateAsync(_ => {});
+        try
+        {
+            _windowSettingsWritableOptions.UpdateAsync(_ => {}).GetAwaiter().GetResult();
+        }
+        catch (Exception)
+        {
+            // The position is saved again on the next move
+        }
     }
 
     private void DataReceiver_OnDataExpiredEvent()

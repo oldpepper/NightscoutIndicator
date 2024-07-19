@@ -9,8 +9,7 @@ public static class ServiceCollectionExtensions
 {
     public static void ConfigureWritable<T>(
         this IServiceCollection services,
-        IConfigurationSection section,
-        string fileName = "appsettings.json") where T : class, new()
+        IConfigurationSection section) where T : class, new()
     {
         services.Configure<T>(section);
         services.AddSingleton<IWritableOptions<T>>(provider =>
@@ -22,8 +21,7 @@ public static class ServiceCollectionExtensions
 //                                          environment,
                                           options, 
                                           configuration, 
-                                          section.Key, 
-                                          fileName);
+                                          section.Key);
         });
     }
 }

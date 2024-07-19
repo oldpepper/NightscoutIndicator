@@ -22,6 +22,9 @@ public static class UserSettingsFile
     private const string APP_FOLDER_NAME = "NightscoutIndicator";
     private const string USER_FILE_NAME = "usersettings.json";
 
+    // The file is written from the UI thread (Save) and from timer threads (indicator position)
+    private static readonly object _syncRoot = new();
+
     /// <summary>
     /// Full path to the per-user settings file.
     /// </summary>
@@ -60,9 +63,12 @@ public static class UserSettingsFile
     /// <returns>The section or null if the file or the section does not exist.</returns>
     public static JObject ReadSection(string sectionName)
     {
-        var root = ReadRoot();
+        lock (_syncRoot)
+        {
+            var root = ReadRoot();
 
-        return root[sectionName] as JObject;
+            return root[sectionName] as JObject;
+        }
     }
 
     /// <summary>
@@ -72,11 +78,15 @@ public static class UserSettingsFile
     /// <param name="section">New content of the section.</param>
     public static void WriteSection(string sectionName, JObject section)
     {
-        var root = ReadRoot();
-        root[sectionName] = section;
+        // Reading and writing under one lock keeps the other sections written by concurrent callers
+        lock (_syncRoot)
+        {
+            var root = ReadRoot();
+            root[sectionName] = section;
 
-        Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
-        File.WriteAllText(FilePath, root.ToString(Formatting.Indented));
+            Directory.CreateDirectory(Path.GetDirectoryName(FilePath));
+            File.WriteAllText(FilePath, root.ToString(Formatting.Indented));
+        }
     }
 
     private static JObject ReadRoot()

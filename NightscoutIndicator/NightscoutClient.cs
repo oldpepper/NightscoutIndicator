@@ -36,11 +36,15 @@ public class NightscoutClient : IDisposable
         using var request = new HttpRequestMessage(HttpMethod.Get, requestUri);
         request.Headers.Add("API-Secret", GetApiSecretHash(_settings.ApiSecret));
 
-        var requestResult = await _client.SendAsync(request);
+        using var requestResult = await _client.SendAsync(request);
         if (!requestResult.IsSuccessStatusCode)
+        {
             throw new NightscoutException("Nightscout API: HTTP " + (int)requestResult.StatusCode + " " + requestResult.StatusCode);
-        var content = requestResult.Content.ReadAsStringAsync().Result;
-        var lines = content.Replace("\r\n", "\n").Split('\n').ToList();
+        }
+
+        var content = await requestResult.Content.ReadAsStringAsync();
+        // An empty response or a trailing line break must not be parsed as an entry
+        var lines = content.Replace("\r\n", "\n").Split('\n').Where(x => !string.IsNullOrWhiteSpace(x)).ToList();
         var entries = lines.Select(x => new NightscoutEntry(x, _settings.Unit)).Distinct().OrderByDescending(x => x.Timestamp).ToList();
         return entries;
     }

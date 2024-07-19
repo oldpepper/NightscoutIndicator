@@ -48,7 +48,7 @@ namespace NightscoutIndicator
 
             services.Configure<NightscoutIndicatorSettings>(commonSettingsSection);
             services.Configure<FlyingIndicatorWindowSettings>(flyingIndicatorWindowSettingsSection);
-            services.ConfigureWritable<FlyingIndicatorWindowSettings>(flyingIndicatorWindowSettingsSection, UserSettingsFile.FilePath);
+            services.ConfigureWritable<FlyingIndicatorWindowSettings>(flyingIndicatorWindowSettingsSection);
             
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<FlyingIndicatorViewModel>();
