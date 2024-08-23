@@ -31,6 +31,12 @@ namespace NightscoutIndicator
             _viewModel.ApiSecret = ApiSecretBox.Password;
         }
 
+        private void ShowApiSecretButton_OnUnchecked(object sender, RoutedEventArgs e)
+        {
+            // The secret may have been edited in the visible text box
+            ApiSecretBox.Password = _viewModel.ApiSecret ?? string.Empty;
+        }
+
         /// <summary>
         /// Unsubscribes from the view model.
         /// </summary>
