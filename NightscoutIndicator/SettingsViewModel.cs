@@ -104,7 +104,11 @@ public partial class SettingsViewModel : ObservableObject
     /// <summary>
     /// Available tray icon modes.
     /// </summary>
-    public TrayIconMode[] TrayIconModes { get; } = Enum.GetValues<TrayIconMode>();
+    public TrayIconModeOption[] TrayIconModes { get; } =
+    [
+        new(TrayIconMode.TwoIcons, "Two icons: number and trend arrow"),
+        new(TrayIconMode.SingleIcon, "One icon: number and trend stripe")
+    ];
 
     /// <summary>
     /// Whether the tray shows two icons.
