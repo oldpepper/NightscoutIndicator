@@ -209,6 +209,8 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
             return;
         }
 
+        var isSingleIcon = _settings.TrayIconMode == TrayIconMode.SingleIcon;
+
 //        if (latestEntry is null)
 //        {
 //            return;
@@ -218,18 +220,32 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
 
         var oldGlucoseIcon = _notifyIconGlucose.Icon;
         var isExpired = latestEntry is null || DateTimeOffset.Now - latestEntry.Timestamp > TimeSpan.FromMinutes(_settings.DataExpirationTimeout);
-        var iconGlucose = _dynamicTrayIconFactory.CreateGlucoseBitmapSource(latestEntry?.Value.ToString("0.#", CultureInfo.InvariantCulture), isExpired);
+        var glucoseText = latestEntry?.Value.ToString("0.#", CultureInfo.InvariantCulture);
+        var iconGlucose = isSingleIcon
+            ? _dynamicTrayIconFactory.CreateSingleIcon(glucoseText, level, _diaCalculations.CalculateLevelDrawingColor(level), latestEntry?.Trend ?? NightscoutTrend.None, isExpired)
+            : _dynamicTrayIconFactory.CreateGlucoseBitmapSource(glucoseText, isExpired);
         _notifyIconGlucose.Icon = iconGlucose;
         oldGlucoseIcon?.Dispose();
         _notifyIconGlucose.Text = GetTooltipText(latestEntry);
         _notifyIconGlucose.Visible = true;
 
-        var oldTrendIcon = _notifyIconTrend.Icon;
-        var iconTrend = _dynamicTrayIconFactory.CreateTrendIcon(_settings.GetTrendIconFileName(latestEntry?.Trend ?? NightscoutTrend.None), _diaCalculations.CalculateLevelDrawingColor(level));
-        _notifyIconTrend.Icon = iconTrend;
-        oldTrendIcon?.Dispose();
-        _notifyIconTrend.Text = GetTooltipText(latestEntry);
-        _notifyIconTrend.Visible = true;
+        if (isSingleIcon)
+        {
+            // The second icon is not needed: the trend is shown by the stripe on the first one
+            _notifyIconTrend.Visible = false;
+            var unusedTrendIcon = _notifyIconTrend.Icon;
+            _notifyIconTrend.Icon = null;
+            unusedTrendIcon?.Dispose();
+        }
+        else
+        {
+            var oldTrendIcon = _notifyIconTrend.Icon;
+            var iconTrend = _dynamicTrayIconFactory.CreateTrendIcon(_settings.GetTrendIconFileName(latestEntry?.Trend ?? NightscoutTrend.None), _diaCalculations.CalculateLevelDrawingColor(level));
+            _notifyIconTrend.Icon = iconTrend;
+            oldTrendIcon?.Dispose();
+            _notifyIconTrend.Text = GetTooltipText(latestEntry);
+            _notifyIconTrend.Visible = true;
+        }
 
         CheckRaiseAlarm(latestEntry);
     }

@@ -33,6 +33,7 @@ public class NightscoutIndicatorSettings
     public string TrendIconDownRight { get; set; }
     public string TrendIconDown { get; set; }
     public string TrendIconUnknown { get; set; }
+    public TrayIconMode TrayIconMode { get; set; } = TrayIconMode.TwoIcons;
 
     /// <summary>
     /// Reads the default settings from the default settings file.

@@ -70,6 +70,10 @@ public partial class SettingsViewModel : ObservableObject
     private string _flyingIndicatorSize;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTwoIconsMode))]
+    private TrayIconMode _trayIconMode;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
     private string _errorText;
 
@@ -96,6 +100,16 @@ public partial class SettingsViewModel : ObservableObject
     /// Available glucose units.
     /// </summary>
     public NightscoutUnit[] Units { get; } = Enum.GetValues<NightscoutUnit>();
+
+    /// <summary>
+    /// Available tray icon modes.
+    /// </summary>
+    public TrayIconMode[] TrayIconModes { get; } = Enum.GetValues<TrayIconMode>();
+
+    /// <summary>
+    /// Whether the tray shows two icons.
+    /// </summary>
+    public bool IsTwoIconsMode => TrayIconMode == TrayIconMode.TwoIcons;
 
     /// <summary>
     /// High alarm sound file.
@@ -146,6 +160,7 @@ public partial class SettingsViewModel : ObservableObject
         UseAlarm = _settings.UseAlarm;
         AlarmInterval = ToText(_settings.AlarmInterval);
         FlyingIndicatorSize = ToText(_settings.FlyingIndicatorSize);
+        TrayIconMode = _settings.TrayIconMode;
 
         var defaults = NightscoutIndicatorSettings.LoadDefaults();
         AlarmHiSound.Load(_settings, defaults);
@@ -205,6 +220,7 @@ public partial class SettingsViewModel : ObservableObject
         }
 
         newSettings.FlyingIndicatorSize = ParsePositiveInt(FlyingIndicatorSize, "Indicator size", errors);
+        newSettings.TrayIconMode = TrayIconMode;
 
         foreach (var trendIcon in TrendIcons)
         {

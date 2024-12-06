@@ -236,7 +236,20 @@
             </Grid>
         </GroupBox>
 
-        <GroupBox Header="Tray trend icons">
+        <GroupBox Header="Tray icon">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Label Grid.Column="0" Content="Mode" />
+                <ComboBox Grid.Column="1" Width="200" HorizontalAlignment="Left"
+                          ItemsSource="{Binding TrayIconModes}" SelectedItem="{Binding TrayIconMode}" />
+            </Grid>
+        </GroupBox>
+
+        <GroupBox Header="Tray trend icons" IsEnabled="{Binding IsTwoIconsMode}">
             <ItemsControl ItemsSource="{Binding TrendIcons}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type local:IconFileViewModel}">

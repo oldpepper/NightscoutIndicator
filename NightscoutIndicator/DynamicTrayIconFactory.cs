@@ -59,10 +59,60 @@ public class DynamicTrayIconFactory
 
         if (!string.IsNullOrEmpty(text))
         {
-            DrawFittedText(g, text, size, isOld ? Brushes.Orchid : Brushes.White);
+            DrawFittedText(g, text, new RectangleF(0, 0, size, size), isOld ? Brushes.Orchid : Brushes.White);
         }
 
         return CreateOwnedIcon(bmp);
+    }
+
+    public Icon CreateSingleIcon(string text, GlucoseLevel level, Color backgroundColor, NightscoutTrend trend, bool isOld = false)
+    {
+        var scale = GetScaleFactorForMainDisplay();
+        var size = Math.Max(16, (int)Math.Round(16 * scale));
+        // 2 px at 100% scale, 3 px at 125%, then proportionally
+        var stripeHeight = Math.Max(2, (int)Math.Round(2 * scale, MidpointRounding.AwayFromZero));
+
+        using var bmp = new Bitmap(size, size, PixelFormat.Format32bppArgb);
+        using var g = Graphics.FromImage(bmp);
+
+        g.Clear(backgroundColor);
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+
+        // The stripe is drawn first, so the digits fill the whole height and overlap it
+        var stripeMultiplier = GetStripeMultiplier(trend);
+        if (stripeMultiplier > 0)
+        {
+            var isRising = trend is NightscoutTrend.FortyFiveUp or NightscoutTrend.SingleUp;
+            var height = stripeHeight * stripeMultiplier;
+            var top = isRising ? 0 : size - height;
+
+            // A red stripe is poorly visible on the red extra high and the purple extra low backgrounds, so it is gold there
+            var stripeBrush = level is GlucoseLevel.ExtraHigh or GlucoseLevel.ExtraLow ? Brushes.Gold : Brushes.Red;
+
+            g.SmoothingMode = SmoothingMode.None;
+            g.FillRectangle(stripeBrush, 0, top, size, height);
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+        }
+
+        if (!string.IsNullOrEmpty(text))
+        {
+            DrawFittedText(g, text, new RectangleF(0, 0, size, size), isOld ? Brushes.Orchid : Brushes.Black);
+        }
+
+        return CreateOwnedIcon(bmp);
+    }
+
+    /// <summary>
+    /// Gets the trend stripe thickness in base stripe heights, or 0 if the trend has no stripe.
+    /// </summary>
+    private static int GetStripeMultiplier(NightscoutTrend trend)
+    {
+        return trend switch
+        {
+            NightscoutTrend.FortyFiveUp or NightscoutTrend.FortyFiveDown => 1,
+            NightscoutTrend.SingleUp or NightscoutTrend.SingleDown => 2,
+            _ => 0
+        };
     }
 
     public Icon CreateTrendIcon(string iconFileName, Color color)
@@ -91,9 +141,9 @@ public class DynamicTrayIconFactory
     }
 
     /// <summary>
-    /// Draws the text stretched to the full height of the icon.
+    /// Draws the text stretched to the full height of the area.
     /// </summary>
-    private static void DrawFittedText(Graphics g, string text, int size, Brush brush)
+    private static void DrawFittedText(Graphics g, string text, RectangleF area, Brush brush)
     {
         // The text outline gives the exact glyph bounds without the empty space above and below the digits
         using var path = new GraphicsPath();
@@ -106,13 +156,12 @@ public class DynamicTrayIconFactory
         }
 
         // The digits fill the whole height without a margin, as the trend icon does; long values are narrowed to fit the width, short ones keep their proportions
-        float available = size;
-        var scaleY = available / bounds.Height;
-        var scaleX = Math.Min(scaleY, available / bounds.Width);
+        var scaleY = area.Height / bounds.Height;
+        var scaleX = Math.Min(scaleY, area.Width / bounds.Width);
 
         // Matrix operations are prepended, so they apply to the points in reverse order
         using var matrix = new Matrix();
-        matrix.Translate(size / 2f, size / 2f);
+        matrix.Translate(area.X + area.Width / 2f, area.Y + area.Height / 2f);
         matrix.Scale(scaleX, scaleY);
         matrix.Translate(-(bounds.X + bounds.Width / 2f), -(bounds.Y + bounds.Height / 2f));
         path.Transform(matrix);
