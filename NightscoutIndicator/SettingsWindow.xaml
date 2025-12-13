@@ -4,9 +4,10 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:NightscoutIndicator"
+        xmlns:loc="clr-namespace:NightscoutIndicator.Localization"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=local:SettingsViewModel}"
-        Title="Nightscout Indicator Settings"
+        Title="{loc:Loc Settings.Title}"
         Width="560"
         SizeToContent="Height"
         ResizeMode="NoResize"
@@ -49,7 +50,21 @@
     </Window.Resources>
 
     <StackPanel Margin="0,4,0,8">
-        <GroupBox Header="Nightscout server">
+        <Grid Margin="8,4">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="188" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Label Grid.Column="0" Content="{loc:Loc Settings.Language}" />
+            <ComboBox Grid.Column="1" Width="160" HorizontalAlignment="Left"
+                      ItemsSource="{Binding Languages}"
+                      DisplayMemberPath="Name"
+                      SelectedValuePath="Code"
+                      SelectedValue="{Binding Language}" />
+        </Grid>
+
+        <GroupBox Header="{loc:Loc Settings.Server}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="180" />
@@ -62,10 +77,10 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Label Grid.Row="0" Grid.Column="0" Content="URL" />
+                <Label Grid.Row="0" Grid.Column="0" Content="{loc:Loc Settings.Url}" />
                 <TextBox Grid.Row="0" Grid.Column="1" Text="{Binding NightscoutUrl, UpdateSourceTrigger=PropertyChanged}" />
 
-                <Label Grid.Row="1" Grid.Column="0" Content="API secret" />
+                <Label Grid.Row="1" Grid.Column="0" Content="{loc:Loc Settings.ApiSecret}" />
                 <Grid Grid.Row="1" Grid.Column="1">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -92,19 +107,19 @@
                                   Padding="0"
                                   FontFamily="Segoe MDL2 Assets"
                                   Content="&#xE7B3;"
-                                  ToolTip="Show or hide the secret"
+                                  ToolTip="{loc:Loc Settings.ApiSecretToggle}"
                                   Unchecked="ShowApiSecretButton_OnUnchecked" />
                 </Grid>
 
-                <Label Grid.Row="2" Grid.Column="0" Content="Update interval, s" />
+                <Label Grid.Row="2" Grid.Column="0" Content="{loc:Loc Settings.UpdateInterval}" />
                 <TextBox Grid.Row="2" Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding UpdateInterval, UpdateSourceTrigger=PropertyChanged}" />
 
-                <Label Grid.Row="3" Grid.Column="0" Content="Data expiration timeout, min" />
+                <Label Grid.Row="3" Grid.Column="0" Content="{loc:Loc Settings.DataExpiration}" />
                 <TextBox Grid.Row="3" Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding DataExpirationTimeout, UpdateSourceTrigger=PropertyChanged}" />
             </Grid>
         </GroupBox>
 
-        <GroupBox Header="Glucose">
+        <GroupBox Header="{loc:Loc Settings.Glucose}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="180" />
@@ -119,14 +134,14 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Label Grid.Row="0" Grid.Column="0" Content="Unit" />
+                <Label Grid.Row="0" Grid.Column="0" Content="{loc:Loc Settings.Unit}" />
                 <ComboBox Grid.Row="0" Grid.Column="1" ItemsSource="{Binding Units}" SelectedItem="{Binding Unit}" />
 
-                <Label Grid.Row="1" Grid.Column="0" Content="Thresholds" />
-                <Label Grid.Row="1" Grid.Column="1" Content="Extra low" Padding="2,0" />
-                <Label Grid.Row="1" Grid.Column="2" Content="Low" Padding="2,0" />
-                <Label Grid.Row="1" Grid.Column="3" Content="High" Padding="2,0" />
-                <Label Grid.Row="1" Grid.Column="4" Content="Extra high" Padding="2,0" />
+                <Label Grid.Row="1" Grid.Column="0" Content="{loc:Loc Settings.Thresholds}" />
+                <Label Grid.Row="1" Grid.Column="1" Content="{loc:Loc Settings.ExtraLow}" Padding="2,0" />
+                <Label Grid.Row="1" Grid.Column="2" Content="{loc:Loc Settings.Low}" Padding="2,0" />
+                <Label Grid.Row="1" Grid.Column="3" Content="{loc:Loc Settings.High}" Padding="2,0" />
+                <Label Grid.Row="1" Grid.Column="4" Content="{loc:Loc Settings.ExtraHigh}" Padding="2,0" />
 
                 <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding ExtraLow, UpdateSourceTrigger=PropertyChanged}" />
                 <TextBox Grid.Row="2" Grid.Column="2" Text="{Binding Low, UpdateSourceTrigger=PropertyChanged}" />
@@ -135,7 +150,7 @@
             </Grid>
         </GroupBox>
 
-        <GroupBox Header="Graph">
+        <GroupBox Header="{loc:Loc Settings.Graph}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="180" />
@@ -147,22 +162,22 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <Label Grid.Row="0" Grid.Column="0" Content="Time range, h" />
+                <Label Grid.Row="0" Grid.Column="0" Content="{loc:Loc Settings.TimeRange}" />
                 <TextBox Grid.Row="0" Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding TimeRange, UpdateSourceTrigger=PropertyChanged}" />
 
-                <Label Grid.Row="1" Grid.Column="0" Content="Size (width × height), px" />
+                <Label Grid.Row="1" Grid.Column="0" Content="{loc:Loc Settings.GraphSize}" />
                 <StackPanel Grid.Row="1" Grid.Column="1" Orientation="Horizontal">
                     <TextBox Width="80" Text="{Binding Width, UpdateSourceTrigger=PropertyChanged}" />
                     <Label Content="×" />
                     <TextBox Width="80" Text="{Binding Height, UpdateSourceTrigger=PropertyChanged}" />
                 </StackPanel>
 
-                <Label Grid.Row="2" Grid.Column="0" Content="Font size" />
+                <Label Grid.Row="2" Grid.Column="0" Content="{loc:Loc Settings.FontSize}" />
                 <TextBox Grid.Row="2" Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding FontSize, UpdateSourceTrigger=PropertyChanged}" />
             </Grid>
         </GroupBox>
 
-        <GroupBox Header="Alarm">
+        <GroupBox Header="{loc:Loc Settings.Alarm}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="180" />
@@ -175,12 +190,12 @@
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
 
-                <CheckBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="6,4" Content="Play sound and show notification" IsChecked="{Binding UseAlarm}" />
+                <CheckBox Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" Margin="6,4" Content="{loc:Loc Settings.UseAlarm}" IsChecked="{Binding UseAlarm}" />
 
-                <Label Grid.Row="1" Grid.Column="0" Content="Repeat not more often, min" />
+                <Label Grid.Row="1" Grid.Column="0" Content="{loc:Loc Settings.AlarmInterval}" />
                 <TextBox Grid.Row="1" Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding AlarmInterval, UpdateSourceTrigger=PropertyChanged}" />
 
-                <Label Grid.Row="2" Grid.Column="0" Content="High glucose alarm sound file" />
+                <Label Grid.Row="2" Grid.Column="0" Content="{loc:Loc Settings.AlarmHiFile}" />
                 <Grid Grid.Row="2" Grid.Column="1" DataContext="{Binding AlarmHiSound}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -191,17 +206,17 @@
 
                     <TextBox Grid.Column="0" Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" />
                     <Button Grid.Column="1" Style="{StaticResource SmallButtonStyle}"
-                            Content="▶" Foreground="Green" ToolTip="Play sound"
+                            Content="▶" Foreground="Green" ToolTip="{loc:Loc Settings.PlaySound}"
                             Command="{Binding PlayCommand}" />
                     <Button Grid.Column="2" Style="{StaticResource SmallButtonStyle}"
-                            Content="..." ToolTip="Select sound file"
+                            Content="..." ToolTip="{loc:Loc Settings.SelectSoundFile}"
                             Command="{Binding BrowseCommand}" />
                     <Button Grid.Column="3" Style="{StaticResource SmallButtonStyle}"
-                            Content="✕" Foreground="Red" FontWeight="Bold" ToolTip="Reset to default sound"
+                            Content="✕" Foreground="Red" FontWeight="Bold" ToolTip="{loc:Loc Settings.ResetSound}"
                             Command="{Binding ResetCommand}" />
                 </Grid>
 
-                <Label Grid.Row="3" Grid.Column="0" Content="Low glucose alarm sound file" />
+                <Label Grid.Row="3" Grid.Column="0" Content="{loc:Loc Settings.AlarmLowFile}" />
                 <Grid Grid.Row="3" Grid.Column="1" DataContext="{Binding AlarmLowSound}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -212,38 +227,38 @@
 
                     <TextBox Grid.Column="0" Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" />
                     <Button Grid.Column="1" Style="{StaticResource SmallButtonStyle}"
-                            Content="▶" Foreground="Green" ToolTip="Play sound"
+                            Content="▶" Foreground="Green" ToolTip="{loc:Loc Settings.PlaySound}"
                             Command="{Binding PlayCommand}" />
                     <Button Grid.Column="2" Style="{StaticResource SmallButtonStyle}"
-                            Content="..." ToolTip="Select sound file"
+                            Content="..." ToolTip="{loc:Loc Settings.SelectSoundFile}"
                             Command="{Binding BrowseCommand}" />
                     <Button Grid.Column="3" Style="{StaticResource SmallButtonStyle}"
-                            Content="✕" Foreground="Red" FontWeight="Bold" ToolTip="Reset to default sound"
+                            Content="✕" Foreground="Red" FontWeight="Bold" ToolTip="{loc:Loc Settings.ResetSound}"
                             Command="{Binding ResetCommand}" />
                 </Grid>
             </Grid>
         </GroupBox>
 
-        <GroupBox Header="Flying indicator">
+        <GroupBox Header="{loc:Loc Settings.FlyingIndicator}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="180" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Label Grid.Column="0" Content="Size, px" />
+                <Label Grid.Column="0" Content="{loc:Loc Settings.IndicatorSize}" />
                 <TextBox Grid.Column="1" Width="80" HorizontalAlignment="Left" Text="{Binding FlyingIndicatorSize, UpdateSourceTrigger=PropertyChanged}" />
             </Grid>
         </GroupBox>
 
-        <GroupBox Header="Tray icon">
+        <GroupBox Header="{loc:Loc Settings.TrayIcon}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="180" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Label Grid.Column="0" Content="Mode" />
+                <Label Grid.Column="0" Content="{loc:Loc Settings.TrayMode}" />
                 <ComboBox Grid.Column="1" Width="260" HorizontalAlignment="Left"
                           ItemsSource="{Binding TrayIconModes}"
                           DisplayMemberPath="Title"
@@ -252,7 +267,7 @@
             </Grid>
         </GroupBox>
 
-        <GroupBox Header="Tray trend icons" IsEnabled="{Binding IsTwoIconsMode}">
+        <GroupBox Header="{loc:Loc Settings.TrendIcons}" IsEnabled="{Binding IsTwoIconsMode}">
             <ItemsControl ItemsSource="{Binding TrendIcons}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="{x:Type local:IconFileViewModel}">
@@ -269,14 +284,14 @@
                             <TextBox Grid.Column="1" Text="{Binding FileName, UpdateSourceTrigger=PropertyChanged}" />
                             <!-- Gray background, as the tray draws the icon over the glucose zone color -->
                             <Border Grid.Column="2" Margin="2" Width="26" Height="26" Background="DimGray"
-                                    ToolTip="Icon preview">
+                                    ToolTip="{loc:Loc Settings.IconPreview}">
                                 <Image Width="24" Height="24" Source="{Binding Preview}" />
                             </Border>
                             <Button Grid.Column="3" Style="{StaticResource SmallButtonStyle}"
-                                    Content="..." ToolTip="Select icon file"
+                                    Content="..." ToolTip="{loc:Loc Settings.SelectIconFile}"
                                     Command="{Binding BrowseCommand}" />
                             <Button Grid.Column="4" Style="{StaticResource SmallButtonStyle}"
-                                    Content="✕" Foreground="Red" FontWeight="Bold" ToolTip="Reset to default icon"
+                                    Content="✕" Foreground="Red" FontWeight="Bold" ToolTip="{loc:Loc Settings.ResetIcon}"
                                     Command="{Binding ResetCommand}" />
                         </Grid>
                     </DataTemplate>
@@ -289,8 +304,8 @@
                    Visibility="{Binding HasError, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
         <StackPanel Margin="8,8,8,0" Orientation="Horizontal" HorizontalAlignment="Right">
-            <Button Content="Save" IsDefault="True" Command="{Binding SaveCommand}" />
-            <Button Content="Cancel" IsCancel="True" Command="{Binding CancelCommand}" />
+            <Button Content="{loc:Loc Common.Save}" IsDefault="True" Command="{Binding SaveCommand}" />
+            <Button Content="{loc:Loc Common.Cancel}" IsCancel="True" Command="{Binding CancelCommand}" />
         </StackPanel>
     </StackPanel>
 </Window>

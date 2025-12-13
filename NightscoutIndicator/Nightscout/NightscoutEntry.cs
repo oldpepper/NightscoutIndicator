@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using NightscoutIndicator.Localization;
+using System.Globalization;
 
 namespace NightscoutIndicator.Nightscout;
 
@@ -40,7 +41,7 @@ public class NightscoutEntry : IEquatable<NightscoutEntry>
         }
         catch (Exception ex)
         {
-            throw new Exception("Parsing entry '" + line + "' failed.", ex);
+            throw new Exception(LocalizationService.Instance.Format("Error.EntryParse", line), ex);
         }
     }
 

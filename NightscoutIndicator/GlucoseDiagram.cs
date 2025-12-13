@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using NightscoutIndicator.Localization;
+using System.Drawing;
 using System.Windows.Forms;
 using NightscoutIndicator.Nightscout;
 using NightscoutIndicator.Styles;
@@ -10,6 +11,8 @@ namespace NightscoutIndicator
         public GlucoseDiagram(NightscoutIndicatorSettings settings, List<NightscoutEntry> entries)
         {
             InitializeComponent();
+
+            Text = LocalizationService.Instance["Diagram.Title"];
 
             Width = settings.Width;
             Height = settings.Height;

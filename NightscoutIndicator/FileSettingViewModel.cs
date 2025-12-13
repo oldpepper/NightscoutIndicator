@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using NightscoutIndicator.Localization;
+using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Win32;
@@ -12,6 +13,7 @@ public abstract partial class FileSettingViewModel : ObservableObject
 {
     private readonly Func<NightscoutIndicatorSettings, string> _getValue;
     private readonly Action<NightscoutIndicatorSettings, string> _setValue;
+    private readonly string _titleKey;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ResetCommand))]
@@ -20,19 +22,22 @@ public abstract partial class FileSettingViewModel : ObservableObject
     /// <summary>
     /// Initializes a new instance of the <see cref="FileSettingViewModel"/> class.
     /// </summary>
-    protected FileSettingViewModel(string title,
+    protected FileSettingViewModel(string titleKey,
                                    Func<NightscoutIndicatorSettings, string> getValue,
                                    Action<NightscoutIndicatorSettings, string> setValue)
     {
-        Title = title;
+        _titleKey = titleKey;
         _getValue = getValue;
         _setValue = setValue;
+
+        // View models live as long as the application, so the subscription is never released
+        LocalizationService.Instance.PropertyChanged += (_, _) => OnPropertyChanged(nameof(Title));
     }
 
     /// <summary>
-    /// Setting title.
+    /// Localized setting title.
     /// </summary>
-    public string Title { get; }
+    public string Title => LocalizationService.Instance[_titleKey];
 
     /// <summary>
     /// Default file name.
@@ -84,7 +89,7 @@ public abstract partial class FileSettingViewModel : ObservableObject
     {
         var dialog = new OpenFileDialog
         {
-            Title = $"Select file: {Title}",
+            Title = LocalizationService.Instance.Format("Dialog.SelectFile", Title),
             Filter = FileFilter,
             CheckFileExists = true
         };

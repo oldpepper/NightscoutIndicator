@@ -1,3 +1,4 @@
+using NightscoutIndicator.Localization;
 using System;
 using System.Net.Http;
 using System.Security.Cryptography;
@@ -29,7 +30,7 @@ public class NightscoutClient : IDisposable
         // URL and secret are read on every call: they may be empty on the first run and changed later in Settings
         if (string.IsNullOrWhiteSpace(_settings.NightscoutUrl))
         {
-            throw new NightscoutException("Nightscout URL is not configured");
+            throw new NightscoutException(LocalizationService.Instance["Error.UrlNotConfigured"]);
         }
 
         var requestUri = $"{_settings.NightscoutUrl.Trim().TrimEnd('/')}/api/v1/entries?count={count}";
@@ -39,7 +40,7 @@ public class NightscoutClient : IDisposable
         using var requestResult = await _client.SendAsync(request);
         if (!requestResult.IsSuccessStatusCode)
         {
-            throw new NightscoutException("Nightscout API: HTTP " + (int)requestResult.StatusCode + " " + requestResult.StatusCode);
+            throw new NightscoutException(LocalizationService.Instance.Format("Error.Http", (int)requestResult.StatusCode, requestResult.StatusCode));
         }
 
         var content = await requestResult.Content.ReadAsStringAsync();

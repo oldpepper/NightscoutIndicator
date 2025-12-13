@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using NightscoutIndicator.Localization;
+using System.IO;
 using System.Windows;
 using CommunityToolkit.Mvvm.Input;
 using NAudio.Wave;
@@ -16,15 +17,23 @@ public partial class SoundFileViewModel : FileSettingViewModel
     /// <summary>
     /// Initializes a new instance of the <see cref="SoundFileViewModel"/> class.
     /// </summary>
-    public SoundFileViewModel(string title,
+    public SoundFileViewModel(string titleKey,
                               Func<NightscoutIndicatorSettings, string> getValue,
                               Action<NightscoutIndicatorSettings, string> setValue)
-        : base(title, getValue, setValue)
+        : base(titleKey, getValue, setValue)
     {
     }
 
     /// <inheritdoc />
-    protected override string FileFilter => "Sound files (*.wav;*.mp3)|*.wav;*.mp3|All files (*.*)|*.*";
+    protected override string FileFilter
+    {
+        get
+        {
+            var localization = LocalizationService.Instance;
+
+            return $"{localization["Dialog.FilterSounds"]} (*.wav;*.mp3)|*.wav;*.mp3|{localization["Dialog.FilterAll"]} (*.*)|*.*";
+        }
+    }
 
     /// <summary>
     /// Stops the playback.
@@ -52,7 +61,7 @@ public partial class SoundFileViewModel : FileSettingViewModel
 
         if (!File.Exists(FullPath))
         {
-            MessageBox.Show($"Sound file not found: {FileName}", Title, MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(LocalizationService.Instance.Format("Sound.NotFound", FileName), Title, MessageBoxButton.OK, MessageBoxImage.Warning);
             return;
         }
 
@@ -67,7 +76,7 @@ public partial class SoundFileViewModel : FileSettingViewModel
         catch (Exception ex)
         {
             Stop();
-            MessageBox.Show($"Error playing sound {FileName}:{Environment.NewLine}{ex.Message}", Title, MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(LocalizationService.Instance.Format("Alarm.PlayError", FileName, ex.Message), Title, MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

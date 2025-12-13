@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using NightscoutIndicator.Localization;
+using System.Globalization;
 using System.IO;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -74,6 +75,9 @@ public partial class SettingsViewModel : ObservableObject
     private TrayIconMode _trayIconMode;
 
     [ObservableProperty]
+    private string _language;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
     private string _errorText;
 
@@ -97,6 +101,11 @@ public partial class SettingsViewModel : ObservableObject
     public event Action CloseRequestedEvent;
 
     /// <summary>
+    /// Available interface languages.
+    /// </summary>
+    public List<LanguageOption> Languages { get; } = LocalizationService.Instance.GetLanguages();
+
+    /// <summary>
     /// Available glucose units.
     /// </summary>
     public NightscoutUnit[] Units { get; } = Enum.GetValues<NightscoutUnit>();
@@ -106,8 +115,8 @@ public partial class SettingsViewModel : ObservableObject
     /// </summary>
     public TrayIconModeOption[] TrayIconModes { get; } =
     [
-        new(TrayIconMode.TwoIcons, "Two icons: number and trend arrow"),
-        new(TrayIconMode.SingleIcon, "One icon: number and trend stripe")
+        new(TrayIconMode.TwoIcons, "Settings.TrayModeTwo"),
+        new(TrayIconMode.SingleIcon, "Settings.TrayModeOne")
     ];
 
     /// <summary>
@@ -118,24 +127,24 @@ public partial class SettingsViewModel : ObservableObject
     /// <summary>
     /// High alarm sound file.
     /// </summary>
-    public SoundFileViewModel AlarmHiSound { get; } = new("High alarm sound", x => x.AlarmHiFileName, (x, v) => x.AlarmHiFileName = v);
+    public SoundFileViewModel AlarmHiSound { get; } = new("Settings.AlarmHiSound", x => x.AlarmHiFileName, (x, v) => x.AlarmHiFileName = v);
 
     /// <summary>
     /// Low alarm sound file.
     /// </summary>
-    public SoundFileViewModel AlarmLowSound { get; } = new("Low alarm sound", x => x.AlarmLowFileName, (x, v) => x.AlarmLowFileName = v);
+    public SoundFileViewModel AlarmLowSound { get; } = new("Settings.AlarmLowSound", x => x.AlarmLowFileName, (x, v) => x.AlarmLowFileName = v);
 
     /// <summary>
     /// Trend icon files.
     /// </summary>
     public IconFileViewModel[] TrendIcons { get; } =
     [
-        new("Rising fast", x => x.TrendIconUp, (x, v) => x.TrendIconUp = v),
-        new("Rising", x => x.TrendIconUpRight, (x, v) => x.TrendIconUpRight = v),
-        new("Stable", x => x.TrendIconFlat, (x, v) => x.TrendIconFlat = v),
-        new("Falling", x => x.TrendIconDownRight, (x, v) => x.TrendIconDownRight = v),
-        new("Falling fast", x => x.TrendIconDown, (x, v) => x.TrendIconDown = v),
-        new("Error", x => x.TrendIconUnknown, (x, v) => x.TrendIconUnknown = v)
+        new("Settings.TrendRisingFast", x => x.TrendIconUp, (x, v) => x.TrendIconUp = v),
+        new("Settings.TrendRising", x => x.TrendIconUpRight, (x, v) => x.TrendIconUpRight = v),
+        new("Settings.TrendStable", x => x.TrendIconFlat, (x, v) => x.TrendIconFlat = v),
+        new("Settings.TrendFalling", x => x.TrendIconDownRight, (x, v) => x.TrendIconDownRight = v),
+        new("Settings.TrendFallingFast", x => x.TrendIconDown, (x, v) => x.TrendIconDown = v),
+        new("Settings.TrendError", x => x.TrendIconUnknown, (x, v) => x.TrendIconUnknown = v)
     ];
 
     /// <summary>
@@ -165,6 +174,7 @@ public partial class SettingsViewModel : ObservableObject
         AlarmInterval = ToText(_settings.AlarmInterval);
         FlyingIndicatorSize = ToText(_settings.FlyingIndicatorSize);
         TrayIconMode = _settings.TrayIconMode;
+        Language = LocalizationService.Instance.ResolveLanguage(_settings.Language);
 
         var defaults = NightscoutIndicatorSettings.LoadDefaults();
         AlarmHiSound.Load(_settings, defaults);
@@ -177,6 +187,20 @@ public partial class SettingsViewModel : ObservableObject
         ErrorText = null;
     }
 
+    /// <summary>
+    /// Restores the language of the saved settings.
+    /// </summary>
+    public void RevertLanguage()
+    {
+        // The language is switched while the window is open to show the result at once, so unsaved changes are rolled back
+        LocalizationService.Instance.SetLanguage(_settings.Language);
+    }
+
+    partial void OnLanguageChanged(string value)
+    {
+        LocalizationService.Instance.SetLanguage(value);
+    }
+
     [RelayCommand]
     private void Save()
     {
@@ -186,35 +210,35 @@ public partial class SettingsViewModel : ObservableObject
         newSettings.NightscoutUrl = NightscoutUrl?.Trim() ?? string.Empty;
         if (newSettings.NightscoutUrl.Length > 0 && !IsHttpUrl(newSettings.NightscoutUrl))
         {
-            errors.Add("Nightscout URL must be an absolute http(s) address.");
+            errors.Add(Localization["Validation.UrlInvalid"]);
         }
 
         newSettings.ApiSecret = ApiSecret ?? string.Empty;
         newSettings.Unit = Unit;
 
-        newSettings.UpdateInterval = ParsePositiveInt(UpdateInterval, "Update interval", errors);
-        newSettings.DataExpirationTimeout = ParsePositiveInt(DataExpirationTimeout, "Data expiration timeout", errors);
+        newSettings.UpdateInterval = ParsePositiveInt(UpdateInterval, "Validation.NameUpdateInterval", errors);
+        newSettings.DataExpirationTimeout = ParsePositiveInt(DataExpirationTimeout, "Validation.NameDataExpiration", errors);
 
-        newSettings.ExtraLow = ParsePositiveDecimal(ExtraLow, "Extra low", errors);
-        newSettings.Low = ParsePositiveDecimal(Low, "Low", errors);
-        newSettings.High = ParsePositiveDecimal(High, "High", errors);
-        newSettings.ExtraHigh = ParsePositiveDecimal(ExtraHigh, "Extra high", errors);
+        newSettings.ExtraLow = ParsePositiveDecimal(ExtraLow, "Settings.ExtraLow", errors);
+        newSettings.Low = ParsePositiveDecimal(Low, "Settings.Low", errors);
+        newSettings.High = ParsePositiveDecimal(High, "Settings.High", errors);
+        newSettings.ExtraHigh = ParsePositiveDecimal(ExtraHigh, "Settings.ExtraHigh", errors);
         var areThresholdsParsed = newSettings.ExtraLow > 0 && newSettings.Low > 0 && newSettings.High > 0 && newSettings.ExtraHigh > 0;
         var areThresholdsOrdered = newSettings.ExtraLow < newSettings.Low &&
                                    newSettings.Low < newSettings.High &&
                                    newSettings.High < newSettings.ExtraHigh;
         if (areThresholdsParsed && !areThresholdsOrdered)
         {
-            errors.Add("Thresholds must grow: Extra low < Low < High < Extra high.");
+            errors.Add(Localization["Validation.ThresholdsOrder"]);
         }
 
-        newSettings.TimeRange = ParsePositiveInt(TimeRange, "Graph time range", errors);
-        newSettings.Width = ParsePositiveInt(Width, "Graph width", errors);
-        newSettings.Height = ParsePositiveInt(Height, "Graph height", errors);
-        newSettings.FontSize = ParsePositiveInt(FontSize, "Graph font size", errors);
+        newSettings.TimeRange = ParsePositiveInt(TimeRange, "Validation.NameTimeRange", errors);
+        newSettings.Width = ParsePositiveInt(Width, "Validation.NameWidth", errors);
+        newSettings.Height = ParsePositiveInt(Height, "Validation.NameHeight", errors);
+        newSettings.FontSize = ParsePositiveInt(FontSize, "Validation.NameFontSize", errors);
 
         newSettings.UseAlarm = UseAlarm;
-        newSettings.AlarmInterval = (double)ParsePositiveDecimal(AlarmInterval, "Alarm interval", errors);
+        newSettings.AlarmInterval = (double)ParsePositiveDecimal(AlarmInterval, "Validation.NameAlarmInterval", errors);
         AlarmHiSound.Store(newSettings);
         AlarmLowSound.Store(newSettings);
         if (newSettings.UseAlarm)
@@ -223,13 +247,14 @@ public partial class SettingsViewModel : ObservableObject
             CheckAlarmFile(newSettings.AlarmLowFileName, AlarmLowSound.Title, errors);
         }
 
-        newSettings.FlyingIndicatorSize = ParsePositiveInt(FlyingIndicatorSize, "Indicator size", errors);
+        newSettings.FlyingIndicatorSize = ParsePositiveInt(FlyingIndicatorSize, "Validation.NameIndicatorSize", errors);
         newSettings.TrayIconMode = TrayIconMode;
+        newSettings.Language = Language;
 
         foreach (var trendIcon in TrendIcons)
         {
             trendIcon.Store(newSettings);
-            CheckIconFile(trendIcon.FileName, $"{trendIcon.Title} icon", errors);
+            CheckIconFile(trendIcon.FileName, Localization.Format("Validation.IconName", trendIcon.Title), errors);
         }
 
         if (errors.Count > 0)
@@ -244,7 +269,7 @@ public partial class SettingsViewModel : ObservableObject
         }
         catch (Exception ex)
         {
-            ErrorText = $"Failed to save {UserSettingsFile.FilePath}:{Environment.NewLine}{ex.Message}";
+            ErrorText = Localization.Format("Validation.SaveFailed", UserSettingsFile.FilePath, ex.Message);
             return;
         }
 
@@ -340,6 +365,8 @@ public partial class SettingsViewModel : ObservableObject
         return result;
     }
 
+    private static LocalizationService Localization => LocalizationService.Instance;
+
     private static string ToInvariantString(JToken token)
     {
         if (token is JValue value)
@@ -362,26 +389,26 @@ public partial class SettingsViewModel : ObservableObject
         return isAbsolute && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
     }
 
-    private static int ParsePositiveInt(string text, string name, List<string> errors)
+    private static int ParsePositiveInt(string text, string nameKey, List<string> errors)
     {
         var isParsed = int.TryParse(text?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var value);
         if (!isParsed || value <= 0)
         {
-            errors.Add($"{name} must be a positive integer.");
+            errors.Add(Localization.Format("Validation.PositiveInt", Localization[nameKey]));
             return 0;
         }
 
         return value;
     }
 
-    private static decimal ParsePositiveDecimal(string text, string name, List<string> errors)
+    private static decimal ParsePositiveDecimal(string text, string nameKey, List<string> errors)
     {
         // Both '.' and ',' are accepted as the decimal separator
         var normalized = text?.Trim().Replace(',', '.');
         var isParsed = decimal.TryParse(normalized, NumberStyles.Number, CultureInfo.InvariantCulture, out var value);
         if (!isParsed || value <= 0)
         {
-            errors.Add($"{name} must be a positive number.");
+            errors.Add(Localization.Format("Validation.PositiveNumber", Localization[nameKey]));
             return 0;
         }
 
@@ -392,14 +419,14 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(fileName))
         {
-            errors.Add($"{name} file is not set.");
+            errors.Add(Localization.Format("Validation.FileNotSet", name));
             return;
         }
 
         var fullPath = NightscoutIndicatorSettings.GetFullPath(fileName.Trim());
         if (!File.Exists(fullPath))
         {
-            errors.Add($"{name} file not found: {fileName}.");
+            errors.Add(Localization.Format("Validation.FileNotFound", name, fileName));
             return;
         }
 
@@ -409,7 +436,7 @@ public partial class SettingsViewModel : ObservableObject
         }
         catch (Exception)
         {
-            errors.Add($"{name} file is not a valid icon: {fileName}.");
+            errors.Add(Localization.Format("Validation.IconInvalid", name, fileName));
         }
     }
 
@@ -417,14 +444,14 @@ public partial class SettingsViewModel : ObservableObject
     {
         if (string.IsNullOrWhiteSpace(fileName))
         {
-            errors.Add($"{name} file is not set.");
+            errors.Add(Localization.Format("Validation.FileNotSet", name));
             return;
         }
 
         // Relative names are resolved against the application folder, as in MainViewModel.PlayAlarm
         if (!File.Exists(Path.Combine(AppContext.BaseDirectory, fileName)))
         {
-            errors.Add($"{name} file not found: {fileName}.");
+            errors.Add(Localization.Format("Validation.FileNotFound", name, fileName));
         }
     }
 }

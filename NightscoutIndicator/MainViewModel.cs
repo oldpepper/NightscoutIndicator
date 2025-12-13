@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using NightscoutIndicator.Localization;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
@@ -35,6 +36,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     
     private NotifyIcon _notifyIconGlucose;
     private NotifyIcon _notifyIconTrend;
+    private ContextMenuStrip[] _trayMenus = [];
     private NightscoutEntry _latestEntry;
     private WaveOutEvent _alarmPlayer;
     private MediaFoundationReader _alarmReader;
@@ -101,6 +103,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
     private void SettingsViewModel_OnSettingsSavedEvent()
     {
         _flyingIndicatorViewModel.ApplySettings();
+        UpdateMenuTexts();
         UpdateLastData(_latestEntry);
     }
 
@@ -145,7 +148,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         var text = latestEntry is null ? "null" : latestEntry.Value.ToString("F1");
         if (!string.IsNullOrEmpty(_lastErrorText))
         {
-            text += $"{Environment.NewLine}No data: {_lastErrorText}";
+            text += $"{Environment.NewLine}{LocalizationService.Instance.Format("Tray.NoData", _lastErrorText)}";
         }
 
         return text.Length <= MAX_LENGTH ? text : text.Substring(0, MAX_LENGTH);
@@ -185,6 +188,9 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         trayMenu2.Items.Add(new ToolStripSeparator());
         trayMenu2.Items.Add("Exit", null, (_, _) => Application.Current.Shutdown());
 
+        _trayMenus = [trayMenu, trayMenu2];
+        UpdateMenuTexts();
+
         
         _notifyIconGlucose = new NotifyIcon();
 //        _notifyIconGlucose.Icon = new Icon(@"Icon\\arrow-up2.ico", 32, 32);
@@ -200,6 +206,21 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         _notifyIconTrend.MouseClick += _diagramViewModel.ShowDiagramAsync;
         _notifyIconTrend.MouseDoubleClick += (_, _) => ShowSettingsWindow();
         _notifyIconTrend.Visible = true;
+    }
+
+    /// <summary>
+    /// Sets the tray menu item texts for the current language.
+    /// </summary>
+    private void UpdateMenuTexts()
+    {
+        var localization = LocalizationService.Instance;
+
+        foreach (var menu in _trayMenus)
+        {
+            // Items are: Settings, separator, Exit
+            menu.Items[0].Text = localization["Tray.Settings"];
+            menu.Items[2].Text = localization["Tray.Exit"];
+        }
     }
 
     private void UpdateLastData(NightscoutEntry latestEntry)
@@ -261,7 +282,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
             (latestEntry.Value == 0 || DateTimeOffset.Now > _lastAlarmDate.AddMinutes(_settings.AlarmInterval)))
         {
             PlayAlarm(_settings.AlarmHiFileName);
-            _notifyIconGlucose.ShowBalloonTip(3000, "HI", latestEntry.Value.ToString("F1"), ToolTipIcon.Error);
+            _notifyIconGlucose.ShowBalloonTip(3000, LocalizationService.Instance["Alarm.High"], latestEntry.Value.ToString("F1"), ToolTipIcon.Error);
 
             _lastAlarmDate = DateTimeOffset.Now;
             return;
@@ -273,7 +294,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
             (latestEntry.Value == 0 || DateTimeOffset.Now > _lastAlarmDate.AddMinutes(_settings.AlarmInterval)))
         {
             PlayAlarm(_settings.AlarmLowFileName);
-            _notifyIconGlucose.ShowBalloonTip(3000, "LOW", latestEntry.Value.ToString("F1"), ToolTipIcon.Error);
+            _notifyIconGlucose.ShowBalloonTip(3000, LocalizationService.Instance["Alarm.Low"], latestEntry.Value.ToString("F1"), ToolTipIcon.Error);
 
             _lastAlarmDate = DateTimeOffset.Now;
             return;
@@ -302,7 +323,7 @@ public class MainViewModel : INotifyPropertyChanged, IDisposable
         catch (Exception ex)
         {
             StopAlarm();
-            MessageBox.Show($"Error playing sound {fileName}:\n{ex.Message}");
+            MessageBox.Show(LocalizationService.Instance.Format("Alarm.PlayError", fileName, ex.Message), LocalizationService.Instance["Common.Error"], MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Options;
+﻿using NightscoutIndicator.Localization;
+using Microsoft.Extensions.Options;
 using NightscoutIndicator.Nightscout;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -63,7 +64,7 @@ public partial class DiagramViewModel : INotifyPropertyChanged, IDisposable
                 {
                     while (ex.InnerException != null)
                         ex = ex.InnerException;
-                    MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(ex.Message, LocalizationService.Instance["Common.Error"], MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
                 var maxTimestamp = entries.Max(x => x.Timestamp);
@@ -79,7 +80,7 @@ public partial class DiagramViewModel : INotifyPropertyChanged, IDisposable
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(ex.Message, LocalizationService.Instance["Common.Error"], MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 

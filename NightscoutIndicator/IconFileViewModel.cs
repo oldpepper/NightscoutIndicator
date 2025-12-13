@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using NightscoutIndicator.Localization;
+using System.Drawing;
 using System.IO;
 using System.Windows;
 using System.Windows.Interop;
@@ -19,15 +20,15 @@ public partial class IconFileViewModel : FileSettingViewModel
     /// <summary>
     /// Initializes a new instance of the <see cref="IconFileViewModel"/> class.
     /// </summary>
-    public IconFileViewModel(string title,
+    public IconFileViewModel(string titleKey,
                              Func<NightscoutIndicatorSettings, string> getValue,
                              Action<NightscoutIndicatorSettings, string> setValue)
-        : base(title, getValue, setValue)
+        : base(titleKey, getValue, setValue)
     {
     }
 
     /// <inheritdoc />
-    protected override string FileFilter => "Icon files (*.ico)|*.ico";
+    protected override string FileFilter => $"{LocalizationService.Instance["Dialog.FilterIcons"]} (*.ico)|*.ico";
 
     /// <summary>
     /// Updates the preview of the selected icon.

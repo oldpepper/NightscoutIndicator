@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using NightscoutIndicator.Localization;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using System.Configuration;
@@ -45,6 +46,10 @@ namespace NightscoutIndicator
 
             var commonSettingsSection = configurationRoot.GetSection(NightscoutIndicatorSettings.SECTION_NAME);
             var flyingIndicatorWindowSettingsSection = configurationRoot.GetSection(FlyingIndicatorWindowSettings.SECTION_NAME);
+
+            // Texts are loaded before any window or tray menu is created
+            var startupSettings = commonSettingsSection.Get<NightscoutIndicatorSettings>();
+            LocalizationService.Instance.SetLanguage(startupSettings?.Language);
 
             services.Configure<NightscoutIndicatorSettings>(commonSettingsSection);
             services.Configure<FlyingIndicatorWindowSettings>(flyingIndicatorWindowSettingsSection);

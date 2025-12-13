@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using NightscoutIndicator.Localization;
+using System.IO;
 using Microsoft.Extensions.Configuration;
 using NightscoutIndicator.Nightscout;
 using NightscoutIndicator.SettingsManagement;
@@ -34,6 +35,7 @@ public class NightscoutIndicatorSettings
     public string TrendIconDown { get; set; }
     public string TrendIconUnknown { get; set; }
     public TrayIconMode TrayIconMode { get; set; } = TrayIconMode.TwoIcons;
+    public string Language { get; set; } = LocalizationService.DEFAULT_LANGUAGE;
 
     /// <summary>
     /// Reads the default settings from the default settings file.

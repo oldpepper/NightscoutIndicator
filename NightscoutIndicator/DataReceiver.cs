@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using NightscoutIndicator.Localization;
+using System.Net.Http;
 using Microsoft.Extensions.Options;
 using NightscoutIndicator.Nightscout;
 
@@ -129,8 +130,8 @@ public class DataReceiver : IDisposable
         return exception switch
         {
             NightscoutException => exception.Message,
-            TaskCanceledException => "Server timeout",
-            HttpRequestException => $"Server unavailable: {exception.Message}",
+            TaskCanceledException => LocalizationService.Instance["Error.ServerTimeout"],
+            HttpRequestException => LocalizationService.Instance.Format("Error.ServerUnavailable", exception.Message),
             _ => exception.Message
         };
     }
